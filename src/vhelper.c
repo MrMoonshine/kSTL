@@ -1,14 +1,18 @@
 //#include <vhelper.h>
 #include "../inc/vhelper.h"
 #include <GL/glext.h>
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan_wayland.h>
 
 static GLFWwindow* window;
 static VkInstance vkinst;
 static VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+static VkSurfaceKHR surface;
 static const char *TAG = "Vulkan";
 
 /*
@@ -73,6 +77,7 @@ static int vulkan_get_arbitrary_device_suitability(VkPhysicalDevice device) {
 int vulkan_run(){
     vulkan_init();
     vulkan_init_window();
+    vulkan_create_window_surface();
     vulkan_dump_extention_info();
     vulkan_main_loop();
     vulkan_cleanup();
@@ -112,6 +117,26 @@ int vulkan_init(){
     /*                   Picking Physical Device                    */
     /*--------------------------------------------------------------*/
     vulkan_pick_physical_device();
+    return EXIT_SUCCESS;
+}
+
+int vulkan_create_window_surface(){
+    VkXcbSurfaceCreateInfoKHR createInfo = {
+        .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+        .pNext = NULL,
+        .flags = 0,
+        .window = glfwGetX11Window(window),
+    };
+
+    if(vkCreateXcbSurfaceKHR(vkinst, &createInfo, NULL, &surface) != VK_SUCCESS){
+        fprintf(stderr,"[%s] Failed to create Xcb surface!\n",TAG);
+        return EXIT_FAILURE;
+    }
+
+    if(glfwCreateWindowSurface(vkinst, window, NULL, &surface)){
+        fprintf(stderr,"[%s] Failed to create surface!\n",TAG);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
