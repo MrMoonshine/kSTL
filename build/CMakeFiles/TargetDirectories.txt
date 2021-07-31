@@ -1,0 +1,3 @@
+/home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles/rebuild_cache.dir
+/home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles/edit_cache.dir
+/home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles/kSTL.dir

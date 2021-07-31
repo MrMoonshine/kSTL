@@ -1,0 +1,1 @@
+gcc CMakeFiles/kSTL.dir/src/main.c.o CMakeFiles/kSTL.dir/src/vhelper.c.o -o kSTL   -L/usr/lib/x86_64-linux-gnu/libvulkan.so  -Wl,-rpath,/usr/lib/x86_64-linux-gnu/libvulkan.so /usr/lib/x86_64-linux-gnu/libglfw.so.3 /usr/lib/x86_64-linux-gnu/libGL.so /usr/lib/x86_64-linux-gnu/libGLEW.so /usr/lib/x86_64-linux-gnu/libvulkan.so 
