@@ -38,7 +38,7 @@ static int vulkan_init_window(){
     return EXIT_SUCCESS;
 }
 
-static bool vulkan_is_device_suitable(VkPhysicalDevice device) {
+static int vulkan_get_arbitrary_device_suitability(VkPhysicalDevice device) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -46,8 +46,28 @@ static bool vulkan_is_device_suitable(VkPhysicalDevice device) {
 
     printf("[%s] Checking: %s\n",TAG, deviceProperties.deviceName);
 
-    return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-           deviceFeatures.geometryShader;
+    if(
+        deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+        deviceFeatures.geometryShader
+    ){
+        int score = 0;
+
+        // Discrete GPUs have a significant performance advantage
+        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        score += 1000;
+
+        // Maximum possible size of textures affects graphics quality
+        score += deviceProperties.limits.maxImageDimension2D;
+
+        // Application can't function without geometry shaders
+        if (!deviceFeatures.geometryShader) {
+            return 0;
+        }
+
+        return score;
+    }else{
+        return 0;
+    }
 }
 
 int vulkan_run(){
@@ -120,15 +140,20 @@ int vulkan_pick_physical_device(){
     }
     vkEnumeratePhysicalDevices(vkinst, &deviceCount, pdevs);
 
+    int devscore = 0;
     for(int a = 0; a < deviceCount; a++){
-        if(vulkan_is_device_suitable(pdevs[a])){
+        int tentative_score = vulkan_get_arbitrary_device_suitability(pdevs[a]);
+        if(devscore <= tentative_score){
+            devscore = tentative_score;
             physical_device = pdevs[a];
-            printf("[%s] Picked physical device!\n",TAG);
-            break;
         }
     }
-
     free(pdevs);
+
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(physical_device, &deviceProperties);
+    printf("[%s] Picked physical device: %s\n",TAG, deviceProperties.deviceName);
+    
     return EXIT_SUCCESS;
 }
 
