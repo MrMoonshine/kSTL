@@ -38,6 +38,15 @@ set_target_properties(glfw3 PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/usr/include/GLFW"
 )
 
+#SDL2
+find_package(SDL2 REQUIRED)
+if (NOT SDL2_FOUND)
+    message (FATAL_ERROR "SDL not found")
+else()
+    include_directories (${SDL2_INCLUDE_DIRS})
+    link_directories (${SDL2_LIBRARIES})
+endif ()
+
 #Vulkan
 find_package(Vulkan REQUIRED)
 if (NOT Vulkan_FOUND)
@@ -54,7 +63,8 @@ include_directories(
 
 add_executable (${PROJECT_NAME} ${SRC_FILES})
 
-target_link_libraries(${PROJECT_NAME} glfw3)
+#target_link_libraries(${PROJECT_NAME} glfw3)
+target_link_libraries(${PROJECT_NAME} SDL2)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)

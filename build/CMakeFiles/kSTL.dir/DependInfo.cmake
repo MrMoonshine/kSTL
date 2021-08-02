@@ -10,6 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/david/Programmieren/C++/QT/kSTL/src/main.c" "CMakeFiles/kSTL.dir/src/main.c.o" "gcc" "CMakeFiles/kSTL.dir/src/main.c.o.d"
   "/home/david/Programmieren/C++/QT/kSTL/src/vhelper.c" "CMakeFiles/kSTL.dir/src/vhelper.c.o" "gcc" "CMakeFiles/kSTL.dir/src/vhelper.c.o.d"
+  "/home/david/Programmieren/C++/QT/kSTL/src/vresult.c" "CMakeFiles/kSTL.dir/src/vresult.c.o" "gcc" "CMakeFiles/kSTL.dir/src/vresult.c.o.d"
   )
 
 # Targets to which this target links.

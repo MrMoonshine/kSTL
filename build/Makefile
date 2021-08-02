@@ -177,6 +177,30 @@ src/vhelper.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/src/vhelper.c.s
 .PHONY : src/vhelper.c.s
 
+src/vresult.o: src/vresult.c.o
+.PHONY : src/vresult.o
+
+# target to build an object file
+src/vresult.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/src/vresult.c.o
+.PHONY : src/vresult.c.o
+
+src/vresult.i: src/vresult.c.i
+.PHONY : src/vresult.i
+
+# target to preprocess a source file
+src/vresult.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/src/vresult.c.i
+.PHONY : src/vresult.c.i
+
+src/vresult.s: src/vresult.c.s
+.PHONY : src/vresult.s
+
+# target to generate assembly for a file
+src/vresult.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/src/vresult.c.s
+.PHONY : src/vresult.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -192,6 +216,9 @@ help:
 	@echo "... src/vhelper.o"
 	@echo "... src/vhelper.i"
 	@echo "... src/vhelper.s"
+	@echo "... src/vresult.o"
+	@echo "... src/vresult.i"
+	@echo "... src/vresult.s"
 .PHONY : help
 
 

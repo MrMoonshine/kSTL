@@ -30,6 +30,8 @@ set(CMAKE_MAKEFILE_DEPENDS
   "../CMakeLists.txt"
   "CMakeFiles/3.21.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.21.1/CMakeSystem.cmake"
+  "/usr/lib/x86_64-linux-gnu/cmake/SDL2/sdl2-config-version.cmake"
+  "/usr/lib/x86_64-linux-gnu/cmake/SDL2/sdl2-config.cmake"
   )
 
 # The corresponding makefile is:

@@ -81,12 +81,12 @@ clean: CMakeFiles/kSTL.dir/clean
 CMakeFiles/kSTL.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kSTL.dir/build.make CMakeFiles/kSTL.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles --progress-num=1,2,3 "Built target kSTL"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles --progress-num=1,2,3,4 "Built target kSTL"
 .PHONY : CMakeFiles/kSTL.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/kSTL.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/kSTL.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/david/Programmieren/C++/QT/kSTL/build/CMakeFiles 0
 .PHONY : CMakeFiles/kSTL.dir/rule

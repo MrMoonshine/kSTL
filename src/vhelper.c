@@ -1,18 +1,22 @@
 //#include <vhelper.h>
 #include "../inc/vhelper.h"
-#include <GL/glext.h>
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
+#include <SDL.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_wayland.h>
 
-static GLFWwindow* window;
+static SDL_Window* window;
+
 static VkInstance vkinst;
+
 static VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+static VkDevice logical_device = VK_NULL_HANDLE;
+
 static VkSurfaceKHR surface;
+static VkQueue presentation_queue, graphics_queue;
+
 static const char *TAG = "Vulkan";
 
 /*
@@ -20,26 +24,58 @@ static const char *TAG = "Vulkan";
 * @returns EXIT_SUCCESS or EXIT_FAILURE
 */
 static int vulkan_init_window(){
-    if(!glfwInit())
-    return EXIT_FAILURE;
-
-    if(!glfwVulkanSupported()){
-        fprintf(stderr, "[%s] Vulkan is not supported by GLFW: Terminating...",TAG);
-        return EXIT_FAILURE;
-    }    
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-    window = glfwCreateWindow(APP_WIDTH, APP_HEIGHT, APP_TITLE, NULL, NULL);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+    window = SDL_CreateWindow(
+        APP_TITLE,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        APP_WIDTH,
+        APP_HEIGHT,
+        SDL_WINDOW_VULKAN
+    );
 
     if(!window){
-        glfwTerminate();
+        SDL_Quit();
         return EXIT_FAILURE;
     }
-
-    glfwMakeContextCurrent(window);
     return EXIT_SUCCESS;
+}
+
+static bool vulkan_has_suitable_queue_family(VkPhysicalDevice device, struct QueueFamilyIndices* qfi){
+    if(qfi)
+    qfi->presentFamilyValid = false;
+
+    bool suitable = false;
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, NULL);
+
+    VkQueueFamilyProperties* queueFamilies;
+    queueFamilies = (VkQueueFamilyProperties*)malloc(queueFamilyCount * sizeof(VkQueueFamilyProperties));
+
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
+
+    for(int a = 0; a < queueFamilyCount; a++){
+        if(queueFamilies[a].queueFlags & VK_QUEUE_GRAPHICS_BIT){
+            suitable = true;
+            if(qfi){
+                qfi->graphicsFamily = a;
+
+                VkBool32 presentSupport = false;
+                vkGetPhysicalDeviceSurfaceSupportKHR(device, a, surface, &presentSupport);
+                if(presentSupport){
+                    qfi->presentFamilyValid = true;
+                    qfi->presentFamily = a;
+                }
+            }
+            
+        }
+    }
+
+    if(qfi){
+        qfi->graphicsFamilyValid = suitable;
+    }
+    free(queueFamilies);
+    return suitable;
 }
 
 static int vulkan_get_arbitrary_device_suitability(VkPhysicalDevice device) {
@@ -75,9 +111,9 @@ static int vulkan_get_arbitrary_device_suitability(VkPhysicalDevice device) {
 }
 
 int vulkan_run(){
-    vulkan_init();
     vulkan_init_window();
-    vulkan_create_window_surface();
+    vulkan_init();
+    
     vulkan_dump_extention_info();
     vulkan_main_loop();
     vulkan_cleanup();
@@ -96,16 +132,24 @@ int vulkan_init(){
         .apiVersion = VK_API_VERSION_1_0
     };    
 
-    VkInstanceCreateInfo createInfo = {
-        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pApplicationInfo = &appInfo
-    };
+    VkInstanceCreateInfo createInfo;
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
 
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    uint32_t sdlExtensionCount = 0;
+    SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL);
 
-    createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
+    const char** sdlExtensions;
+    sdlExtensions = (const char**)malloc(sdlExtensionCount*sizeof(const char**));
+
+    for(int i = 0; i < sdlExtensionCount; i++)
+    sdlExtensions[i] = (const char*)malloc(VK_MAX_EXTENSION_NAME_SIZE);
+    
+
+    SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, sdlExtensions);
+
+    createInfo.enabledExtensionCount = sdlExtensionCount;
+    createInfo.ppEnabledExtensionNames = sdlExtensions;
 
     createInfo.enabledLayerCount = 0;
     
@@ -113,36 +157,104 @@ int vulkan_init(){
         fprintf(stderr, "[%s] Failed to create instance",TAG);
         return EXIT_FAILURE; 
     }
+
+    free(sdlExtensions);
     /*--------------------------------------------------------------*/
     /*                   Picking Physical Device                    */
     /*--------------------------------------------------------------*/
     vulkan_pick_physical_device();
+    //Creating rendering surface
+    vulkan_create_window_surface();
+    //creating presentation queue
+    VkDeviceCreateInfo vdci;
+    vulkan_create_presentation_queue(&vdci);
+
+    //free(qcip);
     return EXIT_SUCCESS;
 }
 
 int vulkan_create_window_surface(){
-    VkXcbSurfaceCreateInfoKHR createInfo = {
-        .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-        .pNext = NULL,
-        .flags = 0,
-        .window = glfwGetX11Window(window),
-    };
-
-    if(vkCreateXcbSurfaceKHR(vkinst, &createInfo, NULL, &surface) != VK_SUCCESS){
-        fprintf(stderr,"[%s] Failed to create Xcb surface!\n",TAG);
-        return EXIT_FAILURE;
-    }
-
-    if(glfwCreateWindowSurface(vkinst, window, NULL, &surface)){
+    if(!SDL_Vulkan_CreateSurface(
+        window,
+        (SDL_vulkanInstance)vkinst,
+        (SDL_vulkanSurface*)&surface
+    )){
         fprintf(stderr,"[%s] Failed to create surface!\n",TAG);
+    }
+    printf("[%s] Created surface Successfully!\n",TAG);
+    return EXIT_SUCCESS;
+}
+int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci){
+    struct QueueFamilyIndices indices;
+    vulkan_has_suitable_queue_family(physical_device, &indices);
+    if(!(indices.graphicsFamilyValid && indices.presentFamilyValid)){
+        fprintf(stderr, "[%s] Failed to create the presentation queue!", TAG);
         return EXIT_FAILURE;
     }
+    
+    
+    const size_t queueCreateInfosSize = 2;
+    uint32_t uniqueQueueFamilies[] = {indices.graphicsFamily, indices.presentFamily};
+    if(indices.graphicsFamily > indices.presentFamily){
+        uniqueQueueFamilies[0] = indices.presentFamily;
+        uniqueQueueFamilies[1] = indices.graphicsFamily;
+    }
+
+    VkDeviceQueueCreateInfo* queueCreateInfos;
+    queueCreateInfos = (VkDeviceQueueCreateInfo*)malloc(queueCreateInfosSize*sizeof(VkDeviceQueueCreateInfo));
+    float queuePriority = 1.0;
+
+    for(int a = 0; a < queueCreateInfosSize; a++){
+        VkDeviceQueueCreateInfo queueCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = uniqueQueueFamilies[a],
+            .queueCount = 1,
+            .pQueuePriorities = &queuePriority,
+        };
+        queueCreateInfos[a] = queueCreateInfo;
+    }
+
+    VkPhysicalDeviceFeatures deviceFeatures;
+    
+    VkDeviceCreateInfo dci = {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .queueCreateInfoCount = queueCreateInfosSize,
+        .pQueueCreateInfos = queueCreateInfos,
+        .pEnabledFeatures = NULL,
+        .enabledLayerCount = 0,
+        .ppEnabledExtensionNames = NULL,
+    };
+    /*vdci->sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    vdci->queueCreateInfoCount = queueCreateInfosSize;
+    vdci->pQueueCreateInfos = queueCreateInfos;
+    vdci->pEnabledFeatures = &deviceFeatures;
+    vdci->enabledLayerCount = 0;*/
+
+    if(vulkan_debug_result(vkCreateDevice(physical_device, &dci, NULL, &logical_device) != VK_SUCCESS)){
+        fprintf(stderr, "[%s] Failed to create the logical device!", TAG);
+        return EXIT_FAILURE;
+    }
+
+    vkGetDeviceQueue(logical_device, indices.graphicsFamily, 0, &graphics_queue);
+    vkGetDeviceQueue(logical_device, indices.presentFamily, 0, &presentation_queue);
+
     return EXIT_SUCCESS;
 }
 
+static bool right_to_live(){
+    SDL_Event event;
+    while(SDL_PollEvent(&event)){
+        switch(event.type){
+            case SDL_QUIT: return false; break;
+            default: break;
+        }
+    }
+    return true;
+}
+
 void vulkan_main_loop(){
-    while(!glfwWindowShouldClose(window)){
-        glfwPollEvents();
+    while(right_to_live()){
+
     }
 }
 
@@ -151,7 +263,7 @@ int vulkan_pick_physical_device(){
     vkEnumeratePhysicalDevices(vkinst, &deviceCount, NULL);
 
     if(deviceCount == 0){
-        fprintf(stderr, "[%s] Failed to find a suitable GPU!",TAG);
+        fprintf(stderr, "[%s] Failed to find any GPU!",TAG);
         return EXIT_FAILURE;
     }
 
@@ -168,11 +280,15 @@ int vulkan_pick_physical_device(){
     int devscore = 0;
     for(int a = 0; a < deviceCount; a++){
         int tentative_score = vulkan_get_arbitrary_device_suitability(pdevs[a]);
-        if(devscore <= tentative_score){
+        if(devscore <= tentative_score && vulkan_has_suitable_queue_family(pdevs[a], NULL)){
             devscore = tentative_score;
             physical_device = pdevs[a];
         }
     }
+
+    if(devscore == 0)
+    fprintf(stderr, "[%s] Selected device might not be suitable to run this program!",TAG);
+
     free(pdevs);
 
     VkPhysicalDeviceProperties deviceProperties;
@@ -184,10 +300,11 @@ int vulkan_pick_physical_device(){
 
 int vulkan_cleanup(){
     //-----Vulkan----
+    vkDestroySurfaceKHR(vkinst, surface, NULL);
     vkDestroyInstance(vkinst, NULL);
-    //-----GLFW-----
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    //-----SDL-----
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 void vulkan_dump_extention_info(){

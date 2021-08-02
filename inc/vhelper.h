@@ -1,24 +1,28 @@
 #pragma once
-//#define VK_USE_PLATFORM_WAYLAND_KHR
-#define VK_USE_PLATFORM_XCB_KHR
+#include <SDL.h>
+#include <SDL_vulkan.h>
+#include <stdint.h>
+
+#define VK_USE_PLATFORM_WAYLAND_KHR
 #include <vulkan/vulkan.h>
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#define GLFW_EXPOSE_NATIVE_X11
-//#define GLFW_EXPOSE_NATIVE_WAYLAND
-#include <GLFW/glfw3native.h>
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <errno.h>
+#include <vresult.h>
 extern int errno;
 
 #define VULKAN_EXTENSION_INFO_LOG_FILE "../vkext.log"
 #define ERR_MSG_MALLOC "Failed to allocate Memory"
 
+struct QueueFamilyIndices{
+    uint32_t graphicsFamily;
+    uint32_t presentFamily;
 
+    bool graphicsFamilyValid;
+    bool presentFamilyValid;
+};
 
 /*
 * @brief wrapper function for all commonly used vulkan functions
@@ -32,6 +36,12 @@ int vulkan_run();
 int vulkan_init();
 
 int vulkan_create_window_surface();
+/*
+* @brief inits the actual Vulkan functionallity
+* @param vidi Pointer to create info
+* @param pointer to be freed after using
+*/
+int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci);
 /*
 * @brief inits the actual Vulkan functionallity
 * @returns EXIT_SUCCESS or EXIT_FAILURE

@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/kSTL.dir/src/main.c.o.d"
   "CMakeFiles/kSTL.dir/src/vhelper.c.o"
   "CMakeFiles/kSTL.dir/src/vhelper.c.o.d"
+  "CMakeFiles/kSTL.dir/src/vresult.c.o"
+  "CMakeFiles/kSTL.dir/src/vresult.c.o.d"
   "kSTL"
   "kSTL.pdb"
 )
