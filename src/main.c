@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     g_signal_connect(
         G_OBJECT(window),
         "destroy",
-        G_CALLBACK(gtk_main_quit),
+        G_CALLBACK(gmenu_close_operation),
         NULL
     );
 

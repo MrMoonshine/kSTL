@@ -1,5 +1,13 @@
 #include <gmenu.h>
 
+static GtkWidget *quitMi;
+
+void gmenu_close_operation(){
+    glwrap_cleanup();
+    printf("[kSTL] Goodbye <3");
+    gtk_main_quit();
+}
+
 void gmenu_init(GtkWidget *parentLayout){
     GtkWidget *menubar;
     /*----------------------------------------*/
@@ -8,7 +16,7 @@ void gmenu_init(GtkWidget *parentLayout){
     GtkWidget *fileMenu;
     GtkWidget *fileMi;
     GtkWidget *openMi;
-    GtkWidget *quitMi;
+    
     /*----------------------------------------*/
     /*            About Menu                  */
     /*----------------------------------------*/
@@ -44,11 +52,14 @@ void gmenu_init(GtkWidget *parentLayout){
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), helpMi);
     gtk_box_pack_start(GTK_BOX(parentLayout), menubar, FALSE, FALSE, 0);
 
-    //Connect Quit-Button with window-close 
     g_signal_connect(
         G_OBJECT(quitMi),
         "activate",
-        G_CALLBACK(gtk_main_quit),
+        G_CALLBACK(gmenu_close_operation),
         NULL
     );
+}
+
+GtkWidget * gmenu_get_quit_button(){
+    return quitMi;
 }

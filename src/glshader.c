@@ -6,26 +6,24 @@
 #include <stdlib.h>
 
 static const char* TAG = "GLSL";
-static char* code_buffer = NULL;
 //if code_buffer is NULL this function can be used to determine a buffer size
-static int get_raw_code(const char* file, char* code){
+static int get_raw_code(const char* file, size_t* code_buffer_size, char* code_buffer){
     FILE *fp;
     fp = fopen(file,"r");
-    if(fp){
-        fseek(fp, 0L, SEEK_END);
-        
-        code_buffer = (char*)malloc(ftell(fp));
-        if(!code_buffer)
-        return EXIT_FAILURE;
+    if(fp){        
+        if(code_buffer == NULL){
+            fseek(fp, 0L, SEEK_END);
+            *code_buffer_size = ftell(fp);
+            fclose(fp);
+            return EXIT_SUCCESS;
+        }
 
-        rewind(fp);
         char buff;
         while((buff = fgetc(fp)) != EOF){
             //printf("%c",buff);
             strncat(code_buffer, &buff,1);
         }
-        code = code_buffer;
-        //free(code_buffer);
+
         fclose(fp);
     }else{
         return EXIT_FAILURE;
@@ -56,23 +54,44 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     /*---------------------------------*/
     /*         Vertexshader            */
     /*---------------------------------*/
-    get_raw_code(vrtxshdrf, code_buffer);
-    glShaderSource(vsid, 1, (const char**)&code_buffer, NULL);
+    char* vtxcode = "";
+    size_t code_buffer_size = 0;
+    get_raw_code(vrtxshdrf, &code_buffer_size, NULL);
+    vtxcode = (char*)malloc(code_buffer_size);
+    strcpy(vtxcode, "");
+    get_raw_code(vrtxshdrf, &code_buffer_size, vtxcode);
+    glShaderSource(vsid, 1, (const char**)&vtxcode, NULL);
     glCompileShader(vsid);
     dump_shader_status(vsid);
-    free(code_buffer);
+    printf("[%s] Vertex shader DONE!...\n",TAG);
     /*---------------------------------*/
     /*       Fragmentshader            */
     /*---------------------------------*/
-    get_raw_code(frgmntshdrf, code_buffer);
-    glShaderSource(fsid, 1, (const char**)&code_buffer, NULL);
+    char* fgmtcode = "";
+    code_buffer_size = 0;
+    get_raw_code(frgmntshdrf, &code_buffer_size, NULL);
+    fgmtcode = (char*)malloc(code_buffer_size);
+    strcpy(fgmtcode, "");
+    get_raw_code(frgmntshdrf, &code_buffer_size, fgmtcode);
+    glShaderSource(fsid, 1, (const char**)&fgmtcode, NULL);
     glCompileShader(fsid);
     dump_shader_status(fsid);
-    free(code_buffer);
+    printf("[%s] Fragment shader DONE!...\n",TAG);
     /*---------------------------------*/
     /*            Linking              */
     /*---------------------------------*/
     printf("[%s] Linking shaders...\n",TAG);
+    GLuint programID = glCreateProgram();
+    glAttachShader(programID, vsid);
+	glAttachShader(programID, fsid);
+	glLinkProgram(programID);
+    dump_shader_status(programID);
+    glDetachShader(programID, vsid);
+    glDetachShader(programID, fsid);
 
-    return 0;
+    free(vtxcode);
+    free(fgmtcode);
+    glDeleteShader(vsid);
+    glDeleteShader(fsid);
+    return programID;
 }

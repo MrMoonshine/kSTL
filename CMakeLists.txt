@@ -5,6 +5,8 @@ project(kSTL C)
 
 add_definitions(
     -DAPP_TITLE="kSTL"
+    -DAPP_HEIGHT=600
+    -DAPP_WIDTH=800
     -DTEST_IMAGE="/home/david/Bilder/carBackground/67e77813c76ba4e924d2abcd952820fc.jpg"
 )
 

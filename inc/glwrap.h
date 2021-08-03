@@ -1,3 +1,4 @@
+#pragma once
 // Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,3 +11,4 @@
 #include <glshader.h>
 
 int glwrap_init_gl(GtkWidget *parentLayout);
+int glwrap_cleanup();
