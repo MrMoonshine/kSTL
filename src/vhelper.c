@@ -16,6 +16,7 @@ static VkDevice logical_device = VK_NULL_HANDLE;
 
 static VkSurfaceKHR surface;
 static VkQueue presentation_queue, graphics_queue;
+VkSwapchainKHR swap_chain;
 
 static const char *TAG = "Vulkan";
 
@@ -110,6 +111,93 @@ static int vulkan_get_arbitrary_device_suitability(VkPhysicalDevice device) {
     }
 }
 
+static int vulkan_querry_swap_chain_support(VkSurfaceFormatKHR* fsel, VkPresentModeKHR* msel){
+    VkSurfaceFormatKHR* formats;
+    uint32_t formatsCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatsCount, NULL);
+
+    VkPresentModeKHR* presentModes;
+    uint32_t presentModesCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &presentModesCount, NULL);
+
+    if(formatsCount < 1 || presentModesCount < 1)
+    return EXIT_FAILURE;
+
+    formats = (VkSurfaceFormatKHR*)malloc(formatsCount * sizeof(VkSurfaceFormatKHR));
+    presentModes = (VkPresentModeKHR*)malloc(presentModesCount * sizeof(VkSurfaceFormatKHR));
+
+    if(!formats || !presentModes)
+    return EXIT_FAILURE;
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatsCount, formats);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &presentModesCount, presentModes);
+
+    bool valid_loop = false;
+    for(int a = 0; a < formatsCount; a++){
+        if(
+            formats[a].format == VK_FORMAT_B8G8R8_SRGB &&
+            formats[a].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+        ){
+            *fsel = formats[a];
+            valid_loop = true;
+            break;
+        }
+    }
+
+    if(!valid_loop)
+    *fsel = formats[0];
+
+    *msel = VK_PRESENT_MODE_FIFO_KHR;
+    for(int a = 0; a < presentModesCount; a++){
+        //Select Tripple Buffer
+        if(presentModes[a] == VK_PRESENT_MODE_MAILBOX_KHR){
+            *msel = presentModes[a];
+            break;
+        }
+    }
+
+    free(formats);
+    free(presentModes);
+    return EXIT_SUCCESS;
+}
+
+static uint32_t uint32_clamp(uint32_t num, uint32_t lo, uint32_t hi){
+    if(num < lo)
+    return lo;
+    else if (num > hi)
+    return hi;
+    else
+    return num;;
+}
+
+static VkExtent2D vulkan_choose_swap_extent(VkSurfaceCapabilitiesKHR* capabilities){
+    if(capabilities->currentExtent.width != UINT32_MAX){
+        return capabilities->currentExtent;
+    }else{
+        int width, height;
+        SDL_GL_GetDrawableSize(window,&width,&height);
+
+        VkExtent2D actualExtent = {
+            (uint32_t)width,
+            (uint32_t)height
+        };
+
+        actualExtent.width = uint32_clamp(
+            actualExtent.width,
+            capabilities->minImageExtent.width,
+            capabilities->maxImageExtent.width
+        );
+
+        actualExtent.height = uint32_clamp(
+            actualExtent.height,
+            capabilities->minImageExtent.height,
+            capabilities->maxImageExtent.height
+        );
+        printf("[%s] SDL Render Space is %dx%d px\n",TAG, actualExtent.width, actualExtent.width);
+        return actualExtent;
+    }
+}
+
 int vulkan_run(){
     vulkan_init_window();
     vulkan_init();
@@ -166,10 +254,12 @@ int vulkan_init(){
     //Creating rendering surface
     vulkan_create_window_surface();
     //creating presentation queue
-    VkDeviceCreateInfo vdci;
-    vulkan_create_presentation_queue(&vdci);
-
-    //free(qcip);
+    struct QueueFamilyIndices indices;
+    vulkan_create_presentation_queue(&indices);
+    /*--------------------------------------------------------------*/
+    /*                  Creating Swap Chain                         */
+    /*--------------------------------------------------------------*/
+    vulkan_create_swap_chain(&indices);
     return EXIT_SUCCESS;
 }
 
@@ -184,20 +274,20 @@ int vulkan_create_window_surface(){
     printf("[%s] Created surface Successfully!\n",TAG);
     return EXIT_SUCCESS;
 }
-int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci){
-    struct QueueFamilyIndices indices;
-    vulkan_has_suitable_queue_family(physical_device, &indices);
-    if(!(indices.graphicsFamilyValid && indices.presentFamilyValid)){
+
+int vulkan_create_presentation_queue(struct QueueFamilyIndices *indices){
+    vulkan_has_suitable_queue_family(physical_device, indices);
+    if(!(indices->graphicsFamilyValid && indices->presentFamilyValid)){
         fprintf(stderr, "[%s] Failed to create the presentation queue!", TAG);
         return EXIT_FAILURE;
     }
     
     
     const size_t queueCreateInfosSize = 2;
-    uint32_t uniqueQueueFamilies[] = {indices.graphicsFamily, indices.presentFamily};
-    if(indices.graphicsFamily > indices.presentFamily){
-        uniqueQueueFamilies[0] = indices.presentFamily;
-        uniqueQueueFamilies[1] = indices.graphicsFamily;
+    uint32_t uniqueQueueFamilies[] = {indices->graphicsFamily, indices->presentFamily};
+    if(indices->graphicsFamily > indices->presentFamily){
+        uniqueQueueFamilies[0] = indices->presentFamily;
+        uniqueQueueFamilies[1] = indices->graphicsFamily;
     }
 
     VkDeviceQueueCreateInfo* queueCreateInfos;
@@ -213,8 +303,6 @@ int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci){
         };
         queueCreateInfos[a] = queueCreateInfo;
     }
-
-    VkPhysicalDeviceFeatures deviceFeatures;
     
     VkDeviceCreateInfo dci = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -224,20 +312,16 @@ int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci){
         .enabledLayerCount = 0,
         .ppEnabledExtensionNames = NULL,
     };
-    /*vdci->sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    vdci->queueCreateInfoCount = queueCreateInfosSize;
-    vdci->pQueueCreateInfos = queueCreateInfos;
-    vdci->pEnabledFeatures = &deviceFeatures;
-    vdci->enabledLayerCount = 0;*/
 
-    if(vulkan_debug_result(vkCreateDevice(physical_device, &dci, NULL, &logical_device) != VK_SUCCESS)){
+    if(vkCreateDevice(physical_device, &dci, NULL, &logical_device) != VK_SUCCESS){
         fprintf(stderr, "[%s] Failed to create the logical device!", TAG);
         return EXIT_FAILURE;
     }
 
-    vkGetDeviceQueue(logical_device, indices.graphicsFamily, 0, &graphics_queue);
-    vkGetDeviceQueue(logical_device, indices.presentFamily, 0, &presentation_queue);
-
+    vkGetDeviceQueue(logical_device, indices->graphicsFamily, 0, &graphics_queue);
+    vkGetDeviceQueue(logical_device, indices->presentFamily, 0, &presentation_queue);
+    free(queueCreateInfos);
+    printf("[%s] Created logical device successfully!", TAG);
     return EXIT_SUCCESS;
 }
 
@@ -298,8 +382,59 @@ int vulkan_pick_physical_device(){
     return EXIT_SUCCESS;
 }
 
+int vulkan_create_swap_chain(struct QueueFamilyIndices* qfi){
+    VkSurfaceFormatKHR chosenSurfaceFormat;
+    VkPresentModeKHR chosenPresentMode;
+
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &capabilities);
+
+    uint32_t imageCount = capabilities.minImageCount + 1;
+    if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
+        imageCount = capabilities.maxImageCount;
+    }
+
+    vulkan_querry_swap_chain_support(&chosenSurfaceFormat, &chosenPresentMode);
+    VkExtent2D extent = vulkan_choose_swap_extent(&capabilities);
+
+    VkSwapchainCreateInfoKHR createInfo = {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .surface = surface,
+        .minImageCount = imageCount,
+        .imageFormat = chosenSurfaceFormat.format,
+        .imageColorSpace = chosenSurfaceFormat.colorSpace,
+        .imageExtent = extent,
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    };
+
+    uint32_t queueFamilyIndices[] = {qfi->graphicsFamily, qfi->presentFamily};
+    if (qfi->graphicsFamily != qfi->presentFamily) {
+        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        createInfo.queueFamilyIndexCount = 2;
+        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    } else {
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        createInfo.queueFamilyIndexCount = 0; // Optional
+        createInfo.pQueueFamilyIndices = NULL; // Optional
+    }
+
+    createInfo.preTransform = capabilities.currentTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = chosenPresentMode;
+    createInfo.clipped = VK_TRUE;
+    createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    /*if (vulkan_debug_result(vkCreateSwapchainKHR(logical_device, &createInfo, NULL, &swap_chain)) != VK_SUCCESS) {
+        fprintf(stderr, "[%s] Failed to create Swap Chain",TAG);
+        return EXIT_FAILURE; 
+    }*/
+    return EXIT_SUCCESS;
+}
+
 int vulkan_cleanup(){
     //-----Vulkan----
+    vkDestroySwapchainKHR(logical_device, swap_chain, NULL);
     vkDestroySurfaceKHR(vkinst, surface, NULL);
     vkDestroyInstance(vkinst, NULL);
     //-----SDL-----

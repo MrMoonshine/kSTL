@@ -37,14 +37,12 @@ int vulkan_init();
 
 int vulkan_create_window_surface();
 /*
-* @brief inits the actual Vulkan functionallity
-* @param vidi Pointer to create info
-* @param pointer to be freed after using
+* @brief creates the presentation and graphics queue
 */
-int vulkan_create_presentation_queue(VkDeviceCreateInfo *vdci);
+int vulkan_create_presentation_queue(struct QueueFamilyIndices *indices);
 /*
 * @brief inits the actual Vulkan functionallity
-* @returns EXIT_SUCCESS or EXIT_FAILURE
+* @returns EXIT_SUCCESS or EXIT_FAILURE 
 */
 void vulkan_main_loop();
 /*
@@ -52,6 +50,10 @@ void vulkan_main_loop();
 * @returns EXIT_FAILURE if no suitable GPU was found
 */
 int vulkan_pick_physical_device();
+/*
+* @brief Creates the swap chain
+*/
+int vulkan_create_swap_chain();
 /*
 * @brief frees the memory
 */
