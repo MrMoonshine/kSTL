@@ -63,7 +63,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     glShaderSource(vsid, 1, (const char**)&vtxcode, NULL);
     glCompileShader(vsid);
     dump_shader_status(vsid);
-    printf("[%s] Vertex shader DONE!...\n",TAG);
+    //printf("[%s] Vertex shader DONE!...\n",TAG);
     /*---------------------------------*/
     /*       Fragmentshader            */
     /*---------------------------------*/
@@ -76,7 +76,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     glShaderSource(fsid, 1, (const char**)&fgmtcode, NULL);
     glCompileShader(fsid);
     dump_shader_status(fsid);
-    printf("[%s] Fragment shader DONE!...\n",TAG);
+    //printf("[%s] Fragment shader DONE!...\n",TAG);
     /*---------------------------------*/
     /*            Linking              */
     /*---------------------------------*/

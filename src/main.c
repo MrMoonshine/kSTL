@@ -1,8 +1,10 @@
 #include <gtk/gtk.h>
 #include <gmenu.h>
 #include <glwrap.h>
+#include <stl.h>
 
 int main(int argc, char *argv[]) {
+    stl_recon();
     GtkWidget *window;
     GtkWidget *vbox;
 
