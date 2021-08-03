@@ -21,6 +21,8 @@ void gmenu_init(GtkWidget *parentLayout){
     /*----------------------------------------*/
     GtkWidget *settingsMenu;
     GtkWidget *settingsMi;
+    GtkWidget *colourPickerMi;
+    GtkWidget *separator1Mi;
     GSList *measurement_units = NULL;
     GtkWidget *unitsMicroMi;
     GtkWidget *unitsMilliMi;
@@ -44,7 +46,9 @@ void gmenu_init(GtkWidget *parentLayout){
     openMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_OPEN, NULL);
     quitMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
     //Settings
-    settingsMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_EDIT, NULL);
+    colourPickerMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_SELECT_COLOR, NULL);
+    separator1Mi = gtk_tearoff_menu_item_new();
+    settingsMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_PROPERTIES, NULL);
     unitsMicroMi = gtk_radio_menu_item_new_with_mnemonic(measurement_units, "_µm");
     measurement_units = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (unitsMicroMi));
     unitsMilliMi = gtk_radio_menu_item_new_with_mnemonic(measurement_units, "_mm");
@@ -55,7 +59,7 @@ void gmenu_init(GtkWidget *parentLayout){
     //Help
     helpMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_HELP, NULL);
     guideMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_HELP, NULL);
-    aboutMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
+    aboutMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_INFO, NULL);
 
     //Add Sub Menus
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileMi), fileMenu);
@@ -63,6 +67,8 @@ void gmenu_init(GtkWidget *parentLayout){
     gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quitMi);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(settingsMi), settingsMenu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(settingsMenu), colourPickerMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(settingsMenu), separator1Mi);
     gtk_menu_shell_append(GTK_MENU_SHELL(settingsMenu), unitsMicroMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(settingsMenu), unitsMilliMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(settingsMenu), unitsDefaultMi);
