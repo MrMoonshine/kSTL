@@ -45,6 +45,10 @@ void gmenu_init(GtkWidget *parentLayout){
     gtk_box_pack_start(GTK_BOX(parentLayout), menubar, FALSE, FALSE, 0);
 
     //Connect Quit-Button with window-close 
-    g_signal_connect(G_OBJECT(quitMi), "activate",
-        G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(
+        G_OBJECT(quitMi),
+        "activate",
+        G_CALLBACK(gtk_main_quit),
+        NULL
+    );
 }

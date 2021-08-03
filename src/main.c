@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <gmenu.h>
+#include <glwrap.h>
 
 int main(int argc, char *argv[]) {
     GtkWidget *window;
@@ -9,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 200);
+    gtk_window_set_default_size(GTK_WINDOW(window), APP_WIDTH, APP_HEIGHT);
     gtk_window_set_title(GTK_WINDOW(window), APP_TITLE);
 
     g_signal_connect(G_OBJECT(window), "destroy",
@@ -18,7 +19,16 @@ int main(int argc, char *argv[]) {
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
+    gtk_widget_add_events(window, 0);
+    g_signal_connect(
+        G_OBJECT(window),
+        "destroy",
+        G_CALLBACK(gtk_main_quit),
+        NULL
+    );
+
     gmenu_init(vbox);
+    glwrap_init_gl(vbox);
 
     gtk_widget_show_all(window);
     gtk_main();
