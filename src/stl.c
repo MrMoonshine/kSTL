@@ -16,3 +16,18 @@ void stl_recon(){
         fclose(stlfp);
     }
 }
+
+static int stl_ascii_count_vertices(){
+    int counter = 0;
+    return counter;
+}
+
+int stl_load_ascii(const char* filename, size_t* buffsize, GLfloat* data){
+    FILE *stlfp;
+    stlfp = fopen(inputfile,"r");
+    if(!stlfp)
+    return EXIT_FAILURE;
+
+    fclose(stlfp);
+    return EXIT_SUCCESS;
+}

@@ -47,7 +47,7 @@ void gmenu_init(GtkWidget *parentLayout){
     quitMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
     //Settings
     colourPickerMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_SELECT_COLOR, NULL);
-    separator1Mi = gtk_tearoff_menu_item_new();
+    separator1Mi = gtk_separator_menu_item_new();
     settingsMi = gtk_image_menu_item_new_from_stock(GTK_STOCK_PROPERTIES, NULL);
     unitsMicroMi = gtk_radio_menu_item_new_with_mnemonic(measurement_units, "_µm");
     measurement_units = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (unitsMicroMi));

@@ -4,7 +4,7 @@
 #include <stl.h>
 
 int main(int argc, char *argv[]) {
-    stl_recon();
+    //stl_recon();
     GtkWidget *window;
     GtkWidget *vbox;
 
