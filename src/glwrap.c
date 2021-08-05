@@ -3,7 +3,11 @@
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <cglm/types.h>
+#include <cglm/vec3.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 
 static GtkWidget* glarea;
 static const char* TAG = "OpenGL";
@@ -12,6 +16,18 @@ static GLuint shaderID;
 static GLuint mvpID;
 static GLuint vertexArrayID;
 static GLfloat window_ratio = 1.0;
+static GLuint window_width = APP_WIDTH, window_height = APP_HEIGHT;
+static clock_t previousRenderTime = 0;
+
+//Field of view
+static const float FOV = 45.0f;
+static const float movement_mouse_sensitivity = 0.005f;
+static const float movement_mouse_speed = 3.0f;
+
+static float movement_angle_horizontal = 0.0f;
+static float movement_angle_vertical = 0.0f;
+static vec2 *movement_offset_buffer;
+static vec3 movement_camera_position;
 // Hold init data for GTK signals:
 struct signal {
 	const gchar	*signal;
@@ -19,22 +35,16 @@ struct signal {
 	GdkEventMask	 mask;
 };
 
-static void handle_perspective(){
-	mat4 origin;
-	glm_mat4_zero(origin);
-	mat4 projection;
-	glm_perspective_default(window_ratio, projection);
-	mat4 view;
-	vec3 eye = {-2,-3,-1};
-	vec3 center = {-2,-3,-1};
-	vec3 up = {0,0,-1};
-	glm_lookat(eye, center, up, view);
+static void handle_perspective(clock_t delta_t){
+	GLfloat deltaX, deltaY;
+	//gmouse_get_movement_offset(&deltaX, &deltaY);
+	deltaX = *movement_offset_buffer[0];
+	deltaY = *movement_offset_buffer[1];
 
-	mat4 MVP;
-	glm_mat4_mul(view, projection, MVP);
-	//glm_mat4_mul(MVP, origin, MVP);
-
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &MVP[0][0]);
+	if(deltaX != 0 || deltaY != 0){
+		movement_angle_horizontal = movement_angle_horizontal + (movement_mouse_speed * deltaX);
+		movement_angle_vertical = movement_angle_vertical + (movement_mouse_speed * deltaY);
+	}
 }
 
 static void on_realize(GtkGLArea *glarea){
@@ -67,7 +77,7 @@ static void on_realize(GtkGLArea *glarea){
 	glBindVertexArray(vertexArrayID);
 
     shaderID = glshader_load( "../shaders/vertexshd1.glsl", "../shaders/fragmentshd1.glsl" );
-	mvpID = glGetUniformLocation(shaderID, "MVP");
+	mvpID = glGetUniformLocation(shaderID, "transform");
 
     static const GLfloat g_vertex_buffer_data[] = { 
 		-1.0f, -1.0f, 0.0f,
@@ -78,13 +88,32 @@ static void on_realize(GtkGLArea *glarea){
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+	glm_vec3_zero(movement_camera_position);
+	previousRenderTime = clock();
 }
 
 static bool on_render(){
-	handle_perspective();
+	/*---------------------------------*/
+    /*       Handle Render Times       */
+    /*---------------------------------*/
+	clock_t current_t, delta_t;
+	current_t = clock();
+	delta_t = current_t - previousRenderTime;
+	previousRenderTime = current_t;
+	//Get time unit in ms
+	delta_t = (double)(delta_t * 1000.0f)/ CLOCKS_PER_SEC;
+	handle_perspective(delta_t);
     // Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderID);
+	mat4 trans = {
+		1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, 1, 1,
+	};
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &trans[0][0]);
     // 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -105,7 +134,10 @@ static bool on_render(){
 }
 
 static void on_resize(GtkGLArea *area, int width, int height){
+	window_width = width;
+	window_height = height;
 	window_ratio = (float)width / (float)height;
+	//printf("[on resize] Offset buffer was: %f %f\n", (*movement_offset_buffer)[0], (*movement_offset_buffer)[1]);
 }
 
 static void connect_signals (GtkWidget *widget, struct signal *signals, size_t members){
@@ -115,8 +147,7 @@ static void connect_signals (GtkWidget *widget, struct signal *signals, size_t m
     }
 }
 
-int glwrap_init_gl(GtkWidget *parentLayout){
-	printf("Size of mat4 is %d\n", sizeof(mat4));
+int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
     /*---------------------------------*/
     /*           GTK+                  */
     /*---------------------------------*/
@@ -133,6 +164,11 @@ int glwrap_init_gl(GtkWidget *parentLayout){
 		{ "motion-notify-event",	G_CALLBACK(on_motion_notify),	GDK_BUTTON1_MOTION_MASK	},*/
 	};
     connect_signals(glarea, signals, callbackCount);
+
+	movement_offset_buffer = (vec2*)malloc(sizeof(*movement_offset_buffer));
+	*movement_offset_buffer[0] = 0;
+	*movement_offset_buffer[1] = 0;
+	gmouse_init_mouse_events(window, movement_offset_buffer);
     /*---------------------------------*/
     /*           OpenGL                */
     /*---------------------------------*/
@@ -141,6 +177,7 @@ int glwrap_init_gl(GtkWidget *parentLayout){
 }
 
 int glwrap_cleanup(){
+	free(movement_offset_buffer);
     glDeleteBuffers(1, &vertexbuffer);
     glDeleteVertexArrays(1, &vertexArrayID);
     glDeleteProgram(shaderID);

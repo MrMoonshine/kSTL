@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 // Include GLEW
 #include <GL/glew.h>
@@ -17,5 +18,5 @@
 #define GL_WRAP_SCROLL_FACTOR_GROW (6.0/5.0)
 #define GL_WRAP_SCROLL_FACTOR_SHRINK (5.0/6.0)
 
-int glwrap_init_gl(GtkWidget *parentLayout);
+int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout);
 int glwrap_cleanup();

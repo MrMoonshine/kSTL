@@ -30,8 +30,7 @@ int main(int argc, char *argv[]) {
     );
 
     gmenu_init(vbox);
-    gmouse_init_mouse_events(window);
-    glwrap_init_gl(vbox);
+    glwrap_init_gl(window, vbox);
 
     gtk_widget_show_all(window);
     gtk_main();
