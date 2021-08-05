@@ -23,6 +23,9 @@ static int stl_ascii_count_vertices(){
 }
 
 int stl_load_ascii(const char* filename, size_t* buffsize, GLfloat* data){
+    fprintf(stderr, "[%s] ASCII STL not implemented yet...", TAG);
+    return EXIT_FAILURE;
+
     FILE *stlfp;
     stlfp = fopen(inputfile,"r");
     if(!stlfp)
