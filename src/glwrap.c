@@ -35,7 +35,21 @@ struct signal {
 	GdkEventMask	 mask;
 };
 
-static void handle_perspective(clock_t delta_t){
+static void dump_mat4(float *mat, const char* title){
+	printf("+----------------------+\n");
+	printf("|   Dumping Matrix     |\n");
+	printf("+----------------------+\n");
+	printf("Begin:\t%s\n",title);
+	for(int a = 0; a < 16; a++){
+		printf("%.2f\t",mat[a]);
+		if(a % 4 == 3)
+		printf("\n");
+	}
+	printf("End:\t%s\n",title);
+	printf("O----------------------O\n");
+}
+
+static void handle_perspective(mat4 transform, clock_t delta_t){
 	GLfloat deltaX, deltaY;
 	//gmouse_get_movement_offset(&deltaX, &deltaY);
 	deltaX = *movement_offset_buffer[0];
@@ -45,6 +59,18 @@ static void handle_perspective(clock_t delta_t){
 		movement_angle_horizontal = movement_angle_horizontal + (movement_mouse_speed * deltaX);
 		movement_angle_vertical = movement_angle_vertical + (movement_mouse_speed * deltaY);
 	}
+
+	vec3 eye = {4,3,-3};
+	vec3 direction = {0,0,0};
+	vec3 up = {0,-1,0};
+
+	mat4 identity, view, projection, buffer;
+	glm_mat4_identity(identity);
+	glm_lookat(eye, direction, up, view);
+	glm_perspective(M_PI/4, window_ratio, 0.1f, 100.0f, projection);
+	glm_mat4_mul(projection, view, buffer);
+	glm_mat4_mul(buffer, identity, transform);
+	dump_mat4((float*)transform, "Transform");
 }
 
 static void on_realize(GtkGLArea *glarea){
@@ -103,17 +129,14 @@ static bool on_render(){
 	previousRenderTime = current_t;
 	//Get time unit in ms
 	delta_t = (double)(delta_t * 1000.0f)/ CLOCKS_PER_SEC;
-	handle_perspective(delta_t);
+
+	mat4 transformation_matrix;
+	handle_perspective(transformation_matrix, delta_t);
     // Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderID);
-	mat4 trans = {
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	};
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &trans[0][0]);
+
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &transformation_matrix[0][0]);
     // 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
