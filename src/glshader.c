@@ -80,7 +80,7 @@ GLuint glshader_load(const char* vrtxshdrf, const char* frgmntshdrf){
     /*---------------------------------*/
     /*            Linking              */
     /*---------------------------------*/
-    printf("[%s] Linking shaders...\n",TAG);
+    //printf("[%s] Linking shaders...\n",TAG);
     GLuint programID = glCreateProgram();
     glAttachShader(programID, vsid);
 	glAttachShader(programID, fsid);

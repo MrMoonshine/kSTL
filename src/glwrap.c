@@ -108,10 +108,10 @@ static bool on_render(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderID);
 	mat4 trans = {
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1,
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
 	};
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &trans[0][0]);
     // 1rst attribute buffer : vertices
