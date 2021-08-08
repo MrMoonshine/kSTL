@@ -175,7 +175,7 @@ void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, normals);
     glVertexAttribPointer(
-        2,                                // attribute
+        1,                                // attribute
         3,                                // size
         GL_FLOAT,                         // type
         GL_FALSE,                         // normalized?

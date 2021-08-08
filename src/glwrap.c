@@ -17,7 +17,7 @@ static GLuint vertexbuffer, normalbuffer, vboSize;
 static GLuint colour_location;
 
 static GLuint shaderID;
-static GLuint mvpID;
+static GLuint shader_var_projection, shader_var_view, shader_var_model;
 static GLuint vertexArrayID;
 static GLfloat window_ratio = 1.0;
 static GLuint window_width = APP_WIDTH, window_height = APP_HEIGHT;
@@ -55,34 +55,21 @@ static void dump_mat4(float *mat, const char* title){
 }
 
 static void handle_perspective(mat4 transform){
-	vec3 eye = {40,30,-30};
+	vec3 eye = {60,45,-45};
 	vec3 direction = {0,0,0};
-	vec3 up = {0,0,1};
+	vec3 up = {0,1,0};
 
-	/*mat4 identity, view, projection, buffer;
-	glm_mat4_identity(identity);
-	glm_lookat(eye, direction, up, view);
-	glm_perspective(M_PI/4, window_ratio, 0.1f, 100.0f, projection);
-	glm_mat4_mul(projection, view, buffer);
-	glm_mat4_mul(buffer, identity, transform);*/
-	//dump_mat4((float*)transform, "Transform");
-	/*mat4 buff;
-	glm_mat4_identity(buff);
-	vec3 myvec = {0.5f, -0.5f, 0.0f};
-	vec3 axis = {0.0f, 1.0f, 0.0f};
-	glm_translate(buff, myvec);
-	glm_rotate(buff, clock()/1000000.0f, axis);
-	glm_mat4_copy(buff, transform);*/
-	vec3 axis = {0.0f, 1.0f, 0.0f};
+	vec3 axis = {1.0f, 0.0f, 0.0f};
 	mat4 identity, view, projection, buffer;
 	glm_mat4_identity(identity);
 	glm_lookat(eye, direction, up, view);
-	glm_perspective(M_PI/4, window_ratio, 0.1f, 100.0f, projection);
-	glm_mat4_mul(projection, view, buffer);
+	glm_perspective(M_PI/4, window_ratio, 1.0f, 1000.0f, projection);
 	//Rotate Cube
 	glm_rotate(identity, clock()/200000.0f, axis);
-	//Multiply
-	glm_mat4_mul(buffer, identity, transform);
+	//Multiplication will be done on the GPU
+	glUniformMatrix4fv(shader_var_projection, 1, GL_FALSE, &projection[0][0]);
+	glUniformMatrix4fv(shader_var_view, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(shader_var_model, 1, GL_FALSE, &identity[0][0]);
 }
 
 static void on_realize(GtkGLArea *glarea){
@@ -115,7 +102,10 @@ static void on_realize(GtkGLArea *glarea){
 	glBindVertexArray(vertexArrayID);
 
     shaderID = glshader_load( "../shaders/vertexshd1.glsl", "../shaders/fragmentshd1.glsl" );
-	mvpID = glGetUniformLocation(shaderID, "transform");
+	shader_var_projection = glGetUniformLocation(shaderID, "projection");
+	shader_var_view = glGetUniformLocation(shaderID, "view");
+	shader_var_model = glGetUniformLocation(shaderID, "model");
+
 	colour_location = glGetUniformLocation(shaderID, "user_requested_colour");
 	/*---------------------------------*/
     /*       Initialize Buffers        */
@@ -142,10 +132,10 @@ static void on_realize(GtkGLArea *glarea){
 
 static bool on_render(){
 	mat4 transformation_matrix;
-	handle_perspective(transformation_matrix);
     glUseProgram(shaderID);
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &transformation_matrix[0][0]);
-	vec3 mycolour = {0.8f, 0.8f, 0.0f};
+	handle_perspective(transformation_matrix);
+	
+	vec3 mycolour = {0.9f, 0.9f, 0.0f};
 	glUniform3fv(colour_location, 1, mycolour);
 	// Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -256,6 +246,7 @@ int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
 int glwrap_cleanup(){
 	free(movement_offset_buffer);
     glDeleteBuffers(1, &vertexbuffer);
+	glDeleteBuffers(1, &normalbuffer);
     glDeleteVertexArrays(1, &vertexArrayID);
     glDeleteProgram(shaderID);
 }
