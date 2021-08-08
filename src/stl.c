@@ -45,7 +45,7 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
 
         //3* 3-Dimensional Points => 9 values per vertex 
         vertex_buffer = (float*)malloc(number_of_vertices * STL_VERTEX_FLOAT_COUNT * sizeof(float));
-        normals_buffer = (float*)malloc(number_of_vertices * sizeof(vec3));
+        normals_buffer = (float*)malloc(number_of_vertices * 3 * sizeof(float));
         if(vertex_buffer == NULL || normals_buffer == NULL){
             fprintf(stderr, "[%s] Failed to allocate Memory!",TAG);
             fclose(stlfp);
@@ -53,9 +53,11 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         }
 
         for(int v = 0; v < number_of_vertices; v++){
-            vec3 normal;
-            fread(normal, sizeof(vec3), 1, stlfp);
+            //vec3 normal;
+            //fread(normal, sizeof(float) * 3, 1, stlfp);
             //printVec3(normal, "Normalvektor");
+            fread(normals_buffer + (v*3), sizeof(float) * 3, 1, stlfp);
+            
             for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
                 fread(
                     vertex_buffer + (v*STL_VERTEX_FLOAT_COUNT + b),
@@ -83,6 +85,7 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
                 printf("\n");
             }           
         }*/
+
         glGenBuffers(1, vbo);
 	    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 	    glBufferData(
@@ -96,7 +99,7 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
 	    glBindBuffer(GL_ARRAY_BUFFER, *normals);
 	    glBufferData(
             GL_ARRAY_BUFFER, 
-            number_of_vertices * sizeof(vec3),
+            number_of_vertices * 3 * sizeof(float),
             normals_buffer,
             GL_STATIC_DRAW
         );
@@ -104,6 +107,9 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         fclose(stlfp);
         free(vertex_buffer);
         free(normals_buffer);
+    }else{
+        errno = EIO;
+        return EXIT_FAILURE;
     }
 
     *vertexCount = number_of_vertices;

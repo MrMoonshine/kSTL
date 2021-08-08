@@ -20,7 +20,7 @@ void main(){
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * lightColour;
 	//Using ambient variables to darken the model
-	float ambientStrength = 0.7;
+	float ambientStrength = 0.8;
 	vec3 ambient = ambientStrength * lightColour;
 
 	float specularStrength = 0.5;
@@ -31,6 +31,10 @@ void main(){
 	vec3 specular = specularStrength * spec * lightColour;  
 
 	vec3 result = (ambient + diffuse + specular) * material_colour;
-	// Output Vector for colour 
-	color = vec4(result, 1.0);
+	// Output Vector for colour
+	if(gl_FragCoord.x < 400)
+        color = vec4(result, 1.0);
+    else
+        color = vec4(abs(norm.x), abs(norm.y), abs(norm.z), 1.0);
+	
 }

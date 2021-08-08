@@ -8,6 +8,9 @@
 
 #include <math.h>
 #include <cglm/cglm.h>
+#include <errno.h>
+
+extern int errno;
 
 #define STL_HEADER_SIZE 80
 #define STL_VERTEX_SIZE 50
