@@ -17,114 +17,148 @@ void stl_recon(){
     }
 }
 
-static int stl_ascii_count_vertices(){
-    int counter = 0;
-    return counter;
+static void printVec3(vec3 vector, const char* label){
+    printf("%s = (%.2f|%.2f|%.2f)\n", label, vector[0], vector[1], vector[2]);
 }
 
-int stl_load_ascii(const char* filename, size_t* buffsize, GLfloat* data){
-    fprintf(stderr, "[%s] ASCII STL not implemented yet...", TAG);
-    return EXIT_FAILURE;
+static void errorInfoGL(){
+    GLenum err;
+    printf("OpenGL eroor: %x\n", glGetError());
+}
 
-    FILE *stlfp;
-    stlfp = fopen(inputfile,"r");
-    if(!stlfp)
-    return EXIT_FAILURE;
+static int stl_binary_file_load(GLuint* vbo, GLuint *normals, const char *filename){
+    uint8_t header[STL_HEADER_SIZE];
+    uint32_t number_of_vertices;
+    float *vertex_buffer, *normals_buffer;
+    
+    FILE* stlfp;
+    stlfp = fopen(filename,"r");
+    if(stlfp){
+        fread(header, STL_HEADER_SIZE, 1, stlfp);
+        fread(&number_of_vertices, sizeof(uint32_t), 1, stlfp);
 
-    fclose(stlfp);
+        if(number_of_vertices < 1){
+            fprintf(stderr, "[%s] Invalid STL Mesh!",TAG);
+            fclose(stlfp);
+            return EXIT_FAILURE;
+        }
+
+        //3* 3-Dimensional Points => 9 values per vertex 
+        vertex_buffer = (float*)malloc(number_of_vertices * STL_VERTEX_FLOAT_COUNT * sizeof(float));
+        normals_buffer = (float*)malloc(number_of_vertices * sizeof(vec3));
+        if(vertex_buffer == NULL || normals_buffer == NULL){
+            fprintf(stderr, "[%s] Failed to allocate Memory!",TAG);
+            fclose(stlfp);
+            return EXIT_FAILURE;
+        }
+
+        for(int v = 0; v < number_of_vertices; v++){
+            printf("New Vertex\n");
+            vec3 normal;
+            fread(normal, sizeof(vec3), 1, stlfp);
+            printVec3(normal, "Normalvektor");
+            for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
+                float buff;
+                fread(&buff, sizeof(float), 1, stlfp);
+                vertex_buffer[v*STL_VERTEX_FLOAT_COUNT + b] = buff;
+
+                printf("%.2f\t",vertex_buffer[v*STL_VERTEX_FLOAT_COUNT + b]);
+                if(b%3 == 2){
+                    printf("\n");
+                } 
+            }
+            //Remaining 2 bytes must be read to continue
+            uint16_t attributes;
+            fread(&attributes, sizeof(uint16_t), 1, stlfp);
+            if(attributes != 0){
+                free(vertex_buffer);
+                free(normals_buffer);
+                fprintf(stderr, "[%s] This software can't handle Attributes!",TAG);
+                fclose(stlfp);
+                return EXIT_FAILURE;
+            }
+        }
+
+        printf("[%s] Vertex buffer from STL is:\n\tIt has %d vertices\n",TAG, number_of_vertices);
+        /*for(int a = 0; a < number_of_vertices * STL_VERTEX_FLOAT_COUNT; a++){
+            printf("%.2f\t",vertex_buffer[a]);
+            if(a%3 == 2){
+                printf("\n");
+            }            
+        }*/
+        glGenBuffers(1, vbo);
+	    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
+	    glBufferData(
+            GL_ARRAY_BUFFER, 
+            sizeof(float) * STL_VERTEX_FLOAT_COUNT * number_of_vertices,
+            vertex_buffer,
+            GL_STATIC_DRAW
+        );
+
+        glGenBuffers(1, normals);
+	    glBindBuffer(GL_ARRAY_BUFFER, *normals);
+	    glBufferData(
+            GL_ARRAY_BUFFER, 
+            number_of_vertices * sizeof(vec3),
+            normals_buffer,
+            GL_STATIC_DRAW
+        );
+
+        fclose(stlfp);
+        free(vertex_buffer);
+        free(normals_buffer);
+    }
     return EXIT_SUCCESS;
 }
 
-void stl_model_init(GLuint* vbo, GLuint *colour){
-    	//Cube data from: https://github.com/opengl-tutorials/ogl/blob/master/tutorial04_colored_cube/tutorial04.cpp
-	const GLfloat test_cube_vertex_buffer_data[] = { 
-		-1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f
-	};
-
-	const GLfloat test_cube_color_buffer_data[] = { 
-		0.583f,  0.771f,  0.014f,
-		0.609f,  0.115f,  0.436f,
-		0.327f,  0.483f,  0.844f,
-		0.822f,  0.569f,  0.201f,
-		0.435f,  0.602f,  0.223f,
-		0.310f,  0.747f,  0.185f,
-		0.597f,  0.770f,  0.761f,
-		0.559f,  0.436f,  0.730f,
-		0.359f,  0.583f,  0.152f,
-		0.483f,  0.596f,  0.789f,
-		0.559f,  0.861f,  0.639f,
-		0.195f,  0.548f,  0.859f,
-		0.014f,  0.184f,  0.576f,
-		0.771f,  0.328f,  0.970f,
-		0.406f,  0.615f,  0.116f,
-		0.676f,  0.977f,  0.133f,
-		0.971f,  0.572f,  0.833f,
-		0.140f,  0.616f,  0.489f,
-		0.997f,  0.513f,  0.064f,
-		0.945f,  0.719f,  0.592f,
-		0.543f,  0.021f,  0.978f,
-		0.279f,  0.317f,  0.505f,
-		0.167f,  0.620f,  0.077f,
-		0.347f,  0.857f,  0.137f,
-		0.055f,  0.953f,  0.042f,
-		0.714f,  0.505f,  0.345f,
-		0.783f,  0.290f,  0.734f,
-		0.722f,  0.645f,  0.174f,
-		0.302f,  0.455f,  0.848f,
-		0.225f,  0.587f,  0.040f,
-		0.517f,  0.713f,  0.338f,
-		0.053f,  0.959f,  0.120f,
-		0.393f,  0.621f,  0.362f,
-		0.673f,  0.211f,  0.457f,
-		0.820f,  0.883f,  0.371f,
-		0.982f,  0.099f,  0.879f
+void stl_model_init(GLuint* vbo, GLuint *normals, const char *filename){
+    stl_binary_file_load(vbo, normals, filename);
+    //Cube data from: https://github.com/opengl-tutorials/ogl/blob/master/tutorial04_colored_cube/tutorial04.cpp
+	/*const GLfloat test_cube_vertex_buffer_data[] = {
+        0.00,   0.00,   0.00,
+        0.00,   0.00,   10.00,
+        0.00,   10.00,  0.00,
+        0.00,   10.00,  0.00,
+        0.00,   0.00,   10.00,
+        0.00,   10.00,  10.00,
+        10.00,  0.00,   10.00,
+        10.00,  0.00,   0.00,
+        10.00,  10.00,  0.00,
+        10.00,  0.00,   10.00,
+        10.00,  10.00,  0.00,
+        10.00,  10.00,  10.00,
+        10.00,  0.00,   0.00,
+        10.00,  0.00,   10.00,
+        0.00,   0.00,   0.00,
+        0.00,   0.00,   0.00,
+        10.00,  0.00,   10.00,
+        0.00,   0.00,   10.00,
+        10.00,  10.00,  10.00,
+        10.00,  10.00,  0.00,
+        0.00,   10.00,  0.00,
+        10.00,  10.00,  10.00,
+        0.00,   10.00,  0.00,
+        0.00,   10.00,  10.00,
+        0.00,   10.00,  0.00,
+        10.00,  10.00,  0.00,
+        0.00,   0.00,   0.00,
+        0.00,   0.00,   0.00,
+        10.00,  10.00,  0.00,
+        10.00,  0.00,   0.00,
+        10.00,  10.00,  10.00,
+        0.00,   10.00,  10.00,
+        0.00,   0.00,   10.00,
+        10.00,  10.00,  10.00,
+        0.00,   0.00,   10.00,
+        10.00,  0.00,   10.00,
 	};
 
 	glGenBuffers(1, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(test_cube_vertex_buffer_data), test_cube_vertex_buffer_data, GL_STATIC_DRAW);
-
-	glGenBuffers(1, colour);
-	glBindBuffer(GL_ARRAY_BUFFER, *colour);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(test_cube_color_buffer_data), test_cube_color_buffer_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(test_cube_vertex_buffer_data), test_cube_vertex_buffer_data, GL_STATIC_DRAW);*/
 }
 
-void stl_model_draw(GLuint vbo, GLuint colour){
+void stl_model_draw(GLuint vbo, GLuint normals){
     /*---------------------------------*/
     /*       Render Vertices           */
     /*---------------------------------*/
@@ -138,23 +172,20 @@ void stl_model_draw(GLuint vbo, GLuint colour){
 		0,                  // stride
 		(void*)0            // array buffer offset
 	);
-
-	/*---------------------------------*/
-    /*      Render Colours             */
-    /*---------------------------------*/
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, colour);
-		glVertexAttribPointer(
-			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-			3,                                // size
-			GL_FLOAT,                         // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-		);
+    //Handle Normals
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, normals);
+    glVertexAttribPointer(
+        2,                                // attribute
+        3,                                // size
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)0                          // array buffer offset
+    );
 	// Draw the triangles!
 	glDrawArrays(GL_TRIANGLES, 0, 12*3); // 3 indices starting at 0 -> 1 triangle
-
+    
 	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(1);
 }

@@ -6,8 +6,14 @@
 // Include GLEW
 #include <GL/glew.h>
 
+#include <math.h>
+#include <cglm/cglm.h>
+
+#define STL_HEADER_SIZE 80
+#define STL_VERTEX_SIZE 50
+#define STL_VERTEX_FLOAT_COUNT 9
+
 void stl_recon();
 
-int stl_load_ascii(const char* filename, size_t* buffsize, GLfloat* data);
-void stl_model_init(GLuint* vbo, GLuint *colour);
-void stl_model_draw(GLuint vbo, GLuint colour);
+void stl_model_init(GLuint* vbo, GLuint *normals, const char *filename);
+void stl_model_draw(GLuint vbo, GLuint normals);

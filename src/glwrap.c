@@ -13,7 +13,8 @@
 static GtkWidget* glarea;
 static const char* TAG = "GTK GL";
 
-static GLuint vertexbuffer, colourbuffer;
+static GLuint vertexbuffer, normalbuffer;
+static GLuint colour_location;
 
 static GLuint shaderID;
 static GLuint mvpID;
@@ -54,17 +55,7 @@ static void dump_mat4(float *mat, const char* title){
 }
 
 static void handle_perspective(mat4 transform){
-	GLfloat deltaX, deltaY;
-	//gmouse_get_movement_offset(&deltaX, &deltaY);
-	deltaX = *movement_offset_buffer[0];
-	deltaY = *movement_offset_buffer[1];
-
-	if(deltaX != 0 || deltaY != 0){
-		movement_angle_horizontal = movement_angle_horizontal + (movement_mouse_speed * deltaX);
-		movement_angle_vertical = movement_angle_vertical + (movement_mouse_speed * deltaY);
-	}
-
-	vec3 eye = {4,3,-3};
+	vec3 eye = {40,30,-30};
 	vec3 direction = {0,0,0};
 	vec3 up = {0,1,0};
 
@@ -82,15 +73,15 @@ static void handle_perspective(mat4 transform){
 	glm_translate(buff, myvec);
 	glm_rotate(buff, clock()/1000000.0f, axis);
 	glm_mat4_copy(buff, transform);*/
-	vec3 myvec = {0.0f, -0.0f, 0.0f};
 	vec3 axis = {0.0f, 1.0f, 0.0f};
 	mat4 identity, view, projection, buffer;
 	glm_mat4_identity(identity);
 	glm_lookat(eye, direction, up, view);
 	glm_perspective(M_PI/4, window_ratio, 0.1f, 100.0f, projection);
 	glm_mat4_mul(projection, view, buffer);
-	glm_translate(identity, myvec);
+	//Rotate Cube
 	glm_rotate(identity, clock()/500000.0f, axis);
+	//Multiply
 	glm_mat4_mul(buffer, identity, transform);
 }
 
@@ -125,10 +116,11 @@ static void on_realize(GtkGLArea *glarea){
 
     shaderID = glshader_load( "../shaders/vertexshd1.glsl", "../shaders/fragmentshd1.glsl" );
 	mvpID = glGetUniformLocation(shaderID, "transform");
+	colour_location = glGetUniformLocation(shaderID, "user_requested_colour");
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
-	stl_model_init(&vertexbuffer, &colourbuffer);
+	stl_model_init(&vertexbuffer, &normalbuffer, "assets/hextest.stl");
 
 	/*---------------------------------*/
     /*       Init GTK stuff            */
@@ -153,9 +145,11 @@ static bool on_render(){
 	handle_perspective(transformation_matrix);
     glUseProgram(shaderID);
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &transformation_matrix[0][0]);
+	vec3 mycolour = {0.8f, 0.8f, 0.0f};
+	glUniform3fv(colour_location, 1, mycolour);
 	// Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	stl_model_draw(vertexbuffer, colourbuffer);
+	stl_model_draw(vertexbuffer, normalbuffer);
     
     return true;
 }
@@ -262,7 +256,6 @@ int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
 int glwrap_cleanup(){
 	free(movement_offset_buffer);
     glDeleteBuffers(1, &vertexbuffer);
-	glDeleteBuffers(1, &colourbuffer);
     glDeleteVertexArrays(1, &vertexArrayID);
     glDeleteProgram(shaderID);
 }
