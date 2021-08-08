@@ -1,5 +1,6 @@
 #pragma once
 #include <gtk/gtk.h>
+#include <dialogs/colour.h>
 /*
 * @brief Init the maenu bar
 * @param Pointer to the parent widget

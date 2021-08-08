@@ -88,6 +88,13 @@ void gmenu_init(GtkWidget *parentLayout){
         G_CALLBACK(gmenu_close_operation),
         NULL
     );
+
+    g_signal_connect(
+        G_OBJECT(colourPickerMi),
+        "activate",
+        G_CALLBACK(dialog_colour_show),
+        NULL
+    );
 }
 
 GtkWidget * gmenu_get_quit_button(){

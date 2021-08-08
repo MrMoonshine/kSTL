@@ -17,7 +17,7 @@ static GLuint vertexbuffer, normalbuffer, vboSize;
 static GLuint colour_location;
 
 static GLuint shaderID;
-static GLuint shader_var_projection, shader_var_view, shader_var_model;
+static GLuint shader_var_projection, shader_var_view, shader_var_model, shader_var_viewPos;
 static GLuint vertexArrayID;
 static GLfloat window_ratio = 1.0;
 static GLuint window_width = APP_WIDTH, window_height = APP_HEIGHT;
@@ -66,10 +66,12 @@ static void handle_perspective(mat4 transform){
 	glm_perspective(M_PI/4, window_ratio, 1.0f, 1000.0f, projection);
 	//Rotate Cube
 	glm_rotate(identity, clock()/200000.0f, axis);
+
 	//Multiplication will be done on the GPU
 	glUniformMatrix4fv(shader_var_projection, 1, GL_FALSE, &projection[0][0]);
 	glUniformMatrix4fv(shader_var_view, 1, GL_FALSE, &view[0][0]);
 	glUniformMatrix4fv(shader_var_model, 1, GL_FALSE, &identity[0][0]);
+	glUniform3fv(shader_var_viewPos, 1, eye);
 }
 
 static void on_realize(GtkGLArea *glarea){
@@ -105,8 +107,9 @@ static void on_realize(GtkGLArea *glarea){
 	shader_var_projection = glGetUniformLocation(shaderID, "projection");
 	shader_var_view = glGetUniformLocation(shaderID, "view");
 	shader_var_model = glGetUniformLocation(shaderID, "model");
+	shader_var_viewPos = glGetUniformLocation(shaderID, "viewPos");
 
-	colour_location = glGetUniformLocation(shaderID, "user_requested_colour");
+	colour_location = glGetUniformLocation(shaderID, "material_colour");
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
