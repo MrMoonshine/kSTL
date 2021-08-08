@@ -15,5 +15,5 @@
 
 void stl_recon();
 
-void stl_model_init(GLuint* vbo, GLuint *normals, const char *filename);
-void stl_model_draw(GLuint vbo, GLuint normals);
+void stl_model_init(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename);
+void stl_model_draw(GLuint vbo, GLuint normals, GLuint vettexCount);

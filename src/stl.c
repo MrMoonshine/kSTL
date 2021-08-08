@@ -26,8 +26,8 @@ static void errorInfoGL(){
     printf("OpenGL eroor: %x\n", glGetError());
 }
 
-static int stl_binary_file_load(GLuint* vbo, GLuint *normals, const char *filename){
-    uint8_t header[STL_HEADER_SIZE];
+static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename){
+    char header[STL_HEADER_SIZE] = "";
     uint32_t number_of_vertices;
     float *vertex_buffer, *normals_buffer;
     
@@ -53,19 +53,16 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, const char *filena
         }
 
         for(int v = 0; v < number_of_vertices; v++){
-            printf("New Vertex\n");
             vec3 normal;
             fread(normal, sizeof(vec3), 1, stlfp);
-            printVec3(normal, "Normalvektor");
+            //printVec3(normal, "Normalvektor");
             for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
-                float buff;
-                fread(&buff, sizeof(float), 1, stlfp);
-                vertex_buffer[v*STL_VERTEX_FLOAT_COUNT + b] = buff;
-
-                printf("%.2f\t",vertex_buffer[v*STL_VERTEX_FLOAT_COUNT + b]);
-                if(b%3 == 2){
-                    printf("\n");
-                } 
+                fread(
+                    vertex_buffer + (v*STL_VERTEX_FLOAT_COUNT + b),
+                    sizeof(float),
+                    1,
+                    stlfp
+                );
             }
             //Remaining 2 bytes must be read to continue
             uint16_t attributes;
@@ -79,12 +76,12 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, const char *filena
             }
         }
 
-        printf("[%s] Vertex buffer from STL is:\n\tIt has %d vertices\n",TAG, number_of_vertices);
+        printf("[%s] STL %s:\n\tIt has %d vertices\n",TAG, header, number_of_vertices);
         /*for(int a = 0; a < number_of_vertices * STL_VERTEX_FLOAT_COUNT; a++){
             printf("%.2f\t",vertex_buffer[a]);
             if(a%3 == 2){
                 printf("\n");
-            }            
+            }           
         }*/
         glGenBuffers(1, vbo);
 	    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
@@ -108,11 +105,13 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, const char *filena
         free(vertex_buffer);
         free(normals_buffer);
     }
+
+    *vertexCount = number_of_vertices;
     return EXIT_SUCCESS;
 }
 
-void stl_model_init(GLuint* vbo, GLuint *normals, const char *filename){
-    stl_binary_file_load(vbo, normals, filename);
+void stl_model_init(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename){
+    stl_binary_file_load(vbo, normals, vertexCount, filename);
     //Cube data from: https://github.com/opengl-tutorials/ogl/blob/master/tutorial04_colored_cube/tutorial04.cpp
 	/*const GLfloat test_cube_vertex_buffer_data[] = {
         0.00,   0.00,   0.00,
@@ -158,7 +157,7 @@ void stl_model_init(GLuint* vbo, GLuint *normals, const char *filename){
 	glBufferData(GL_ARRAY_BUFFER, sizeof(test_cube_vertex_buffer_data), test_cube_vertex_buffer_data, GL_STATIC_DRAW);*/
 }
 
-void stl_model_draw(GLuint vbo, GLuint normals){
+void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
     /*---------------------------------*/
     /*       Render Vertices           */
     /*---------------------------------*/
@@ -184,8 +183,8 @@ void stl_model_draw(GLuint vbo, GLuint normals){
         (void*)0                          // array buffer offset
     );
 	// Draw the triangles!
-	glDrawArrays(GL_TRIANGLES, 0, 12*3); // 3 indices starting at 0 -> 1 triangle
-    
+	glDrawArrays(GL_TRIANGLES, 0, vertexCount*3); // 3 indices starting at 0 -> 1 triangle
+
 	glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }

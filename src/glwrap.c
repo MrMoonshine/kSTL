@@ -13,7 +13,7 @@
 static GtkWidget* glarea;
 static const char* TAG = "GTK GL";
 
-static GLuint vertexbuffer, normalbuffer;
+static GLuint vertexbuffer, normalbuffer, vboSize;
 static GLuint colour_location;
 
 static GLuint shaderID;
@@ -57,7 +57,7 @@ static void dump_mat4(float *mat, const char* title){
 static void handle_perspective(mat4 transform){
 	vec3 eye = {40,30,-30};
 	vec3 direction = {0,0,0};
-	vec3 up = {0,1,0};
+	vec3 up = {0,0,1};
 
 	/*mat4 identity, view, projection, buffer;
 	glm_mat4_identity(identity);
@@ -80,7 +80,7 @@ static void handle_perspective(mat4 transform){
 	glm_perspective(M_PI/4, window_ratio, 0.1f, 100.0f, projection);
 	glm_mat4_mul(projection, view, buffer);
 	//Rotate Cube
-	glm_rotate(identity, clock()/500000.0f, axis);
+	glm_rotate(identity, clock()/200000.0f, axis);
 	//Multiply
 	glm_mat4_mul(buffer, identity, transform);
 }
@@ -108,8 +108,8 @@ static void on_realize(GtkGLArea *glarea){
     //background_init();
     // Dark purple background
 	glClearColor(0.4f, 0.0f, 0.4f, 0.0f);
-	// For testing purposes:
-	glDisable(GL_CULL_FACE);
+	// Performace upgrade
+	glEnable(GL_CULL_FACE);
     //Test Triangle
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
@@ -120,7 +120,7 @@ static void on_realize(GtkGLArea *glarea){
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
-	stl_model_init(&vertexbuffer, &normalbuffer, "assets/hextest.stl");
+	stl_model_init(&vertexbuffer, &normalbuffer, &vboSize,"assets/3DBenchy.stl");
 
 	/*---------------------------------*/
     /*       Init GTK stuff            */
@@ -149,7 +149,7 @@ static bool on_render(){
 	glUniform3fv(colour_location, 1, mycolour);
 	// Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	stl_model_draw(vertexbuffer, normalbuffer);
+	stl_model_draw(vertexbuffer, normalbuffer, vboSize);
     
     return true;
 }
