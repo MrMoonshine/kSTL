@@ -16,7 +16,10 @@ extern int errno;
 #define STL_VERTEX_SIZE 50
 #define STL_VERTEX_FLOAT_COUNT 9
 
+#define STL_GL_10_BITS 10
+#define STL_GL_10_MAX ((2 << (STL_GL_10_BITS - 1))-1)
+
 void stl_recon();
 
 void stl_model_init(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename);
-void stl_model_draw(GLuint vbo, GLuint normals, GLuint vettexCount);
+void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount);

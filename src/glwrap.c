@@ -55,7 +55,7 @@ static void dump_mat4(float *mat, const char* title){
 }
 
 static void handle_perspective(mat4 transform){
-	vec3 eye = {40,30,-30};
+	vec3 eye = {60,45,-45};
 	vec3 direction = {0,0,0};
 	vec3 up = {0,1,0};
 
@@ -113,7 +113,7 @@ static void on_realize(GtkGLArea *glarea){
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
-	stl_model_init(&vertexbuffer, &normalbuffer, &vboSize,"assets/hextest.stl");
+	stl_model_init(&vertexbuffer, &normalbuffer, &vboSize,"assets/gear.stl");
 
 	/*---------------------------------*/
     /*       Init GTK stuff            */

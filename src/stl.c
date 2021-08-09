@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,15 @@ void stl_recon(){
     }
 }
 
+static int vec3_to_int_2_10_10_10_rev(vec3 vector){
+    int result = 0;
+    result |= (int)(STL_GL_10_MAX * vector[2]) << 0;
+    result |= (int)(STL_GL_10_MAX * vector[1]) << 10;
+    result |= (int)(STL_GL_10_MAX * vector[0]) << 20;
+    result |= (int)(0b11) << 30;
+    return result;
+}
+
 static void printVec3(vec3 vector, const char* label){
     printf("%s = (%.2f|%.2f|%.2f)\n", label, vector[0], vector[1], vector[2]);
 }
@@ -29,7 +39,8 @@ static void errorInfoGL(){
 static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename){
     char header[STL_HEADER_SIZE] = "";
     uint32_t number_of_vertices;
-    float *vertex_buffer, *normals_buffer;
+    float *vertex_buffer;
+    int *normals_buffer;
     
     FILE* stlfp;
     stlfp = fopen(filename,"r");
@@ -45,7 +56,7 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
 
         //3* 3-Dimensional Points => 9 values per vertex 
         vertex_buffer = (float*)malloc(number_of_vertices * STL_VERTEX_FLOAT_COUNT * sizeof(float));
-        normals_buffer = (float*)malloc(number_of_vertices * 3 * sizeof(float));
+        normals_buffer = (int*)malloc(number_of_vertices * 3 * sizeof(int));
         if(vertex_buffer == NULL || normals_buffer == NULL){
             fprintf(stderr, "[%s] Failed to allocate Memory!",TAG);
             fclose(stlfp);
@@ -53,10 +64,13 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         }
 
         for(int v = 0; v < number_of_vertices; v++){
-            //vec3 normal;
-            //fread(normal, sizeof(float) * 3, 1, stlfp);
+            vec3 normal;
+            fread(normal, sizeof(float) * 3, 1, stlfp);
             //printVec3(normal, "Normalvektor");
-            fread(normals_buffer + (v*3), sizeof(float) * 3, 1, stlfp);
+            int valuebuffer = vec3_to_int_2_10_10_10_rev(normal);
+            for(int a = 0; a < 3; a++)
+            normals_buffer[v*3 + a] = valuebuffer;
+            
             
             for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
                 fread(
@@ -85,6 +99,13 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
                 printf("\n");
             }           
         }*/
+        /*printf("[%s] Normal Vectors\n",TAG);
+        for(int a = 0; a < number_of_vertices; a++){
+            printf("%d\t",(normals_buffer[a] >> 20) & 1023);
+            printf("%d\t",(normals_buffer[a] >> 10) & 1023);
+            printf("%d\t\t",(normals_buffer[a] >> 0) & 1023);
+            printf("%d\n",normals_buffer[a]);
+        }*/
 
         glGenBuffers(1, vbo);
 	    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
@@ -99,7 +120,7 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
 	    glBindBuffer(GL_ARRAY_BUFFER, *normals);
 	    glBufferData(
             GL_ARRAY_BUFFER, 
-            number_of_vertices * 3 * sizeof(float),
+            number_of_vertices * 3 * sizeof(int),
             normals_buffer,
             GL_STATIC_DRAW
         );
@@ -182,9 +203,9 @@ void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
     glBindBuffer(GL_ARRAY_BUFFER, normals);
     glVertexAttribPointer(
         1,                                // attribute
-        3,                                // size
-        GL_FLOAT,                         // type
-        GL_FALSE,                         // normalized?
+        4,                                // size
+        GL_INT_2_10_10_10_REV,            // type
+        GL_TRUE ,                         // normalized?
         0,                                // stride
         (void*)0                          // array buffer offset
     );
