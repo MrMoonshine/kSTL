@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         NULL
     );
 
-    gmenu_init(vbox);
+    gmenu_init(window, vbox);
     glwrap_init_gl(
         argc > 1 ? argv[1] : "",
         window,

@@ -1,6 +1,52 @@
 #include <gmenu.h>
+#include <stdio.h>
 
+GtkWindow *parentWindow;
+/*----------------------------------------*/
+/*             File Menu                  */
+/*----------------------------------------*/
 static GtkWidget *quitMi;
+static GtkWidget *openMi;
+/*----------------------------------------*/
+/*             Dialogs                    */
+/*----------------------------------------*/
+static GtkWidget *fileDialog;
+
+static void dialog_open_file(){
+    fileDialog = gtk_file_chooser_dialog_new ("Select STL Mesh",
+                                      parentWindow,
+                                      GTK_FILE_CHOOSER_ACTION_OPEN,
+                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                      NULL
+    );
+
+    GtkFileFilter *filter;
+    filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.stl");
+    gtk_file_filter_add_pattern(filter, "*.ast");
+    gtk_file_filter_set_name(filter, "Stereolitography Meshes (.stl, .ast)");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(fileDialog), filter);
+
+    if (gtk_dialog_run (GTK_DIALOG (fileDialog)) == GTK_RESPONSE_ACCEPT){
+        char *filename;
+
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (fileDialog));
+        //printf("Selected file: %s\n", filename);
+        glwrap_load_mesh(filename);
+        g_free (filename);
+    }
+    gtk_widget_destroy (fileDialog);
+}
+
+static void connect_callbacks(){
+    g_signal_connect(
+    G_OBJECT(openMi),
+    "activate",
+    G_CALLBACK(dialog_open_file),
+    NULL
+    );
+}
 
 void gmenu_close_operation(){
     glwrap_cleanup();
@@ -8,14 +54,14 @@ void gmenu_close_operation(){
     gtk_main_quit();
 }
 
-void gmenu_init(GtkWidget *parentLayout){
+void gmenu_init(GtkWindow *parent_window, GtkWidget *parentLayout){
+    parentWindow = parent_window;
     GtkWidget *menubar;
     /*----------------------------------------*/
     /*             File Menu                  */
     /*----------------------------------------*/
     GtkWidget *fileMenu;
     GtkWidget *fileMi;
-    GtkWidget *openMi;
     /*----------------------------------------*/
     /*            Settings                    */
     /*----------------------------------------*/
@@ -95,6 +141,8 @@ void gmenu_init(GtkWidget *parentLayout){
         G_CALLBACK(dialog_colour_show),
         NULL
     );
+
+    connect_callbacks();
 }
 
 GtkWidget * gmenu_get_quit_button(){

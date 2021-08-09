@@ -229,7 +229,13 @@ static void connect_glarea_signals(GtkWidget *glarea){
     connect_signals(glarea, signals, callbackCount);
 }
 
+int glwrap_load_mesh(const char* filename){
+	stl_model_free(&stl_mesh);
+	return stl_model_init(&stl_mesh, filename);
+}
+
 int glwrap_init_gl(const char* filename, GtkWidget *window, GtkWidget *parentLayout){
+	stl_mesh.success = false;
 	strcpy(stl_filename, filename);
     /*---------------------------------*/
     /*           GTK+                  */
