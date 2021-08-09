@@ -30,7 +30,11 @@ int main(int argc, char *argv[]) {
     );
 
     gmenu_init(vbox);
-    glwrap_init_gl(window, vbox);
+    glwrap_init_gl(
+        argc > 1 ? argv[1] : "",
+        window,
+        vbox
+    );
 
     gtk_widget_show_all(window);
     gtk_main();

@@ -19,11 +19,16 @@ extern int errno;
 #define STL_GL_10_BITS 10
 #define STL_GL_10_MAX ((2 << (STL_GL_10_BITS - 1))-1)
 
+#define STL_VTX_MOD_X 0
+#define STL_VTX_MOD_Y 1
+#define STL_VTX_MOD_Z 2
+
 void stl_recon();
 
 struct MetaSTL{
     size_t vertices;
     GLuint vertexbuffer, normalbuffer;
+    vec3 center_offset;
     bool success;
 };
 

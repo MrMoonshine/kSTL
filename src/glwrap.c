@@ -13,6 +13,8 @@
 static GtkWidget* glarea;
 static const char* TAG = "GTK GL";
 
+static char stl_filename[128] = "";
+
 static struct MetaSTL stl_mesh;
 static GLuint colour_location;
 
@@ -30,9 +32,11 @@ static const float movement_mouse_speed = 3.0f;
 
 static float movement_angle_horizontal = 0.0f;
 static float movement_angle_vertical = 0.0f;
-static vec2 *movement_offset_buffer;
 
-vec3 mycolour = {0.9f, 0.9f, 0.0f};
+static double tentativeOriginX = 0, tentativeOriginY = 0;
+static bool clicked = false;
+static vec3 mycolour = {0.9f, 0.9f, 0.0f};
+static vec3 translation = {0.0, 0.0, -20.0};
 
 // Hold init data for GTK signals:
 struct signal {
@@ -68,7 +72,6 @@ static void handle_perspective(mat4 transform){
 	//Rotate Cube
 	glm_rotate(identity, -M_PI/2, axis);
 
-	vec3 translation = {0.0, 0.0, -20.0};
 	glm_translate(identity, translation);
 
 	//Multiplication will be done on the GPU
@@ -117,7 +120,7 @@ static void on_realize(GtkGLArea *glarea){
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
-	stl_model_init(&stl_mesh,"assets/3DBenchy.stl");
+	stl_model_init(&stl_mesh,stl_filename);
 
 	/*---------------------------------*/
     /*       Init GTK stuff            */
@@ -154,39 +157,29 @@ static void on_resize(GtkGLArea *area, int width, int height){
 	window_width = width;
 	window_height = height;
 	window_ratio = (float)width / (float)height;
-	//printf("[on resize] Offset buffer was: %f %f\n", (*movement_offset_buffer)[0], (*movement_offset_buffer)[1]);
 }
 
 static bool on_button_press (GtkWidget *widget, GdkEventButton *event){
-	//GtkAllocation allocation;
-	//gtk_widget_get_allocation(widget, &allocation);
-
-	if (event->button == 1)
-	printf("Button Press\nprev render time: %d\n",previousRenderTime);
-		/*if (panning == FALSE) {
-			panning = TRUE;
-			model_pan_start(event->x, allocation.height - event->y);
-		}*/
-
+	if (event->button == 1){
+		clicked = true;
+		tentativeOriginX = event->x;
+		tentativeOriginY = event->y;
+	}
 	return FALSE;
 }
 
 static bool on_button_release (GtkWidget *widget, GdkEventButton *event){
-	if (event->button == 1)
-	printf("Button Release\n");
-	//panning = FALSE;
-
+	if (event->button == 1){
+		clicked = false;
+	}
 	return FALSE;
 }
 
 static bool on_motion_notify (GtkWidget *widget, GdkEventMotion *event){
-	GtkAllocation allocation;
-	gtk_widget_get_allocation(widget, &allocation);
-
-	//if (panning == TRUE)
-	//model_pan_move(event->x, allocation.height - event->y);
-	printf("Motion Notify");
-
+	if(clicked){
+		translation[0] += (tentativeOriginX - event->x)/1000.0;
+		translation[2] += (tentativeOriginY - event->y)/1000.0;
+	}
 	return FALSE;
 }
 
@@ -236,18 +229,14 @@ static void connect_glarea_signals(GtkWidget *glarea){
     connect_signals(glarea, signals, callbackCount);
 }
 
-int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
+int glwrap_init_gl(const char* filename, GtkWidget *window, GtkWidget *parentLayout){
+	strcpy(stl_filename, filename);
     /*---------------------------------*/
     /*           GTK+                  */
     /*---------------------------------*/
     glarea = gtk_gl_area_new();
     gtk_box_pack_start(GTK_BOX(parentLayout), glarea, TRUE, TRUE, 0);
     connect_glarea_signals(glarea);
-
-	movement_offset_buffer = (vec2*)malloc(sizeof(*movement_offset_buffer));
-	*movement_offset_buffer[0] = 0;
-	*movement_offset_buffer[1] = 0;
-	//gmouse_init_mouse_events(window, movement_offset_buffer);
     /*---------------------------------*/
     /*           OpenGL                */
     /*---------------------------------*/
@@ -256,7 +245,6 @@ int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
 }
 
 int glwrap_cleanup(){
-	free(movement_offset_buffer);
     stl_model_free(&stl_mesh);
     glDeleteVertexArrays(1, &vertexArrayID);
     glDeleteProgram(shaderID);

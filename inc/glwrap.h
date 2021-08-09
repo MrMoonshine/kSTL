@@ -24,5 +24,5 @@
 
 } MetaGL;*/
 
-int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout);
+int glwrap_init_gl(const char* filename, GtkWidget *window, GtkWidget *parentLayout);
 int glwrap_cleanup();

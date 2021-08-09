@@ -60,12 +60,12 @@ int stl_model_init(struct MetaSTL* meta, const char *filename){
             fread(normal, sizeof(float) * 3, 1, stlfp);
             int valuebuffer = vec3_to_int_2_10_10_10_rev(normal);
             for(int a = 0; a < 3; a++)
-            normals_buffer[v*3 + a] = valuebuffer;
-            
+            normals_buffer[v*3 + a] = valuebuffer;      
             
             for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
+                uint32_t tentative_index = v * STL_VERTEX_FLOAT_COUNT + b; 
                 fread(
-                    vertex_buffer + (v*STL_VERTEX_FLOAT_COUNT + b),
+                    vertex_buffer + (tentative_index),
                     sizeof(float),
                     1,
                     stlfp
@@ -153,5 +153,6 @@ void stl_model_free(struct MetaSTL* meta){
     if(meta->success){
         glDeleteBuffers(1, &meta->vertexbuffer);
         glDeleteBuffers(1, &meta->normalbuffer);
+        meta->success = false;
     }
 }
