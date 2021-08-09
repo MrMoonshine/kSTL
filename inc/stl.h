@@ -21,5 +21,12 @@ extern int errno;
 
 void stl_recon();
 
-void stl_model_init(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename);
-void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount);
+struct MetaSTL{
+    size_t vertices;
+    GLuint vertexbuffer, normalbuffer;
+    bool success;
+};
+
+int stl_model_init(struct MetaSTL* meta, const char *filename);
+void stl_model_draw(struct MetaSTL* meta);
+void stl_model_free(struct MetaSTL* meta);

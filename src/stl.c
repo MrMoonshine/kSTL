@@ -27,16 +27,8 @@ static int vec3_to_int_2_10_10_10_rev(vec3 vector){
     return result;
 }
 
-static void printVec3(vec3 vector, const char* label){
-    printf("%s = (%.2f|%.2f|%.2f)\n", label, vector[0], vector[1], vector[2]);
-}
-
-static void errorInfoGL(){
-    GLenum err;
-    printf("OpenGL eroor: %x\n", glGetError());
-}
-
-static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename){
+int stl_model_init(struct MetaSTL* meta, const char *filename){
+    meta->success = false; 
     char header[STL_HEADER_SIZE] = "";
     uint32_t number_of_vertices;
     float *vertex_buffer;
@@ -66,7 +58,6 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         for(int v = 0; v < number_of_vertices; v++){
             vec3 normal;
             fread(normal, sizeof(float) * 3, 1, stlfp);
-            //printVec3(normal, "Normalvektor");
             int valuebuffer = vec3_to_int_2_10_10_10_rev(normal);
             for(int a = 0; a < 3; a++)
             normals_buffer[v*3 + a] = valuebuffer;
@@ -93,22 +84,9 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         }
 
         printf("[%s] STL %s:\n\tIt has %d vertices\n",TAG, header, number_of_vertices);
-        /*for(int a = 0; a < number_of_vertices * STL_VERTEX_FLOAT_COUNT; a++){
-            printf("%.2f\t",vertex_buffer[a]);
-            if(a%3 == 2){
-                printf("\n");
-            }           
-        }*/
-        /*printf("[%s] Normal Vectors\n",TAG);
-        for(int a = 0; a < number_of_vertices; a++){
-            printf("%d\t",(normals_buffer[a] >> 20) & 1023);
-            printf("%d\t",(normals_buffer[a] >> 10) & 1023);
-            printf("%d\t\t",(normals_buffer[a] >> 0) & 1023);
-            printf("%d\n",normals_buffer[a]);
-        }*/
 
-        glGenBuffers(1, vbo);
-	    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
+        glGenBuffers(1, &meta->vertexbuffer);
+	    glBindBuffer(GL_ARRAY_BUFFER, meta->vertexbuffer);
 	    glBufferData(
             GL_ARRAY_BUFFER, 
             sizeof(float) * STL_VERTEX_FLOAT_COUNT * number_of_vertices,
@@ -116,8 +94,8 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
             GL_STATIC_DRAW
         );
 
-        glGenBuffers(1, normals);
-	    glBindBuffer(GL_ARRAY_BUFFER, *normals);
+        glGenBuffers(1, &meta->normalbuffer);
+	    glBindBuffer(GL_ARRAY_BUFFER, meta->normalbuffer);
 	    glBufferData(
             GL_ARRAY_BUFFER, 
             number_of_vertices * 3 * sizeof(int),
@@ -133,63 +111,18 @@ static int stl_binary_file_load(GLuint* vbo, GLuint *normals, GLuint *vertexCoun
         return EXIT_FAILURE;
     }
 
-    *vertexCount = number_of_vertices;
+    meta->vertices = number_of_vertices;
+    meta->success = true; 
     return EXIT_SUCCESS;
 }
 
-void stl_model_init(GLuint* vbo, GLuint *normals, GLuint *vertexCount, const char *filename){
-    stl_binary_file_load(vbo, normals, vertexCount, filename);
-    //Cube data from: https://github.com/opengl-tutorials/ogl/blob/master/tutorial04_colored_cube/tutorial04.cpp
-	/*const GLfloat test_cube_vertex_buffer_data[] = {
-        0.00,   0.00,   0.00,
-        0.00,   0.00,   10.00,
-        0.00,   10.00,  0.00,
-        0.00,   10.00,  0.00,
-        0.00,   0.00,   10.00,
-        0.00,   10.00,  10.00,
-        10.00,  0.00,   10.00,
-        10.00,  0.00,   0.00,
-        10.00,  10.00,  0.00,
-        10.00,  0.00,   10.00,
-        10.00,  10.00,  0.00,
-        10.00,  10.00,  10.00,
-        10.00,  0.00,   0.00,
-        10.00,  0.00,   10.00,
-        0.00,   0.00,   0.00,
-        0.00,   0.00,   0.00,
-        10.00,  0.00,   10.00,
-        0.00,   0.00,   10.00,
-        10.00,  10.00,  10.00,
-        10.00,  10.00,  0.00,
-        0.00,   10.00,  0.00,
-        10.00,  10.00,  10.00,
-        0.00,   10.00,  0.00,
-        0.00,   10.00,  10.00,
-        0.00,   10.00,  0.00,
-        10.00,  10.00,  0.00,
-        0.00,   0.00,   0.00,
-        0.00,   0.00,   0.00,
-        10.00,  10.00,  0.00,
-        10.00,  0.00,   0.00,
-        10.00,  10.00,  10.00,
-        0.00,   10.00,  10.00,
-        0.00,   0.00,   10.00,
-        10.00,  10.00,  10.00,
-        0.00,   0.00,   10.00,
-        10.00,  0.00,   10.00,
-	};
 
-	glGenBuffers(1, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(test_cube_vertex_buffer_data), test_cube_vertex_buffer_data, GL_STATIC_DRAW);*/
-}
-
-void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
+void stl_model_draw(struct MetaSTL* meta){
     /*---------------------------------*/
     /*       Render Vertices           */
     /*---------------------------------*/
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, meta->vertexbuffer);
 	glVertexAttribPointer(
 		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -200,7 +133,7 @@ void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
 	);
     //Handle Normals
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, normals);
+    glBindBuffer(GL_ARRAY_BUFFER, meta->normalbuffer);
     glVertexAttribPointer(
         1,                                // attribute
         4,                                // size
@@ -210,8 +143,15 @@ void stl_model_draw(GLuint vbo, GLuint normals, GLuint vertexCount){
         (void*)0                          // array buffer offset
     );
 	// Draw the triangles!
-	glDrawArrays(GL_TRIANGLES, 0, vertexCount*3); // 3 indices starting at 0 -> 1 triangle
+	glDrawArrays(GL_TRIANGLES, 0, meta->vertices * 3); // 3 indices starting at 0 -> 1 triangle
 
 	glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+}
+
+void stl_model_free(struct MetaSTL* meta){
+    if(meta->success){
+        glDeleteBuffers(1, &meta->vertexbuffer);
+        glDeleteBuffers(1, &meta->normalbuffer);
+    }
 }

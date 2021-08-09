@@ -13,7 +13,7 @@
 static GtkWidget* glarea;
 static const char* TAG = "GTK GL";
 
-static GLuint vertexbuffer, normalbuffer, vboSize;
+static struct MetaSTL stl_mesh;
 static GLuint colour_location;
 
 static GLuint shaderID;
@@ -32,6 +32,7 @@ static float movement_angle_horizontal = 0.0f;
 static float movement_angle_vertical = 0.0f;
 static vec2 *movement_offset_buffer;
 
+vec3 mycolour = {0.9f, 0.9f, 0.0f};
 
 // Hold init data for GTK signals:
 struct signal {
@@ -65,7 +66,10 @@ static void handle_perspective(mat4 transform){
 	glm_lookat(eye, direction, up, view);
 	glm_perspective(M_PI/4, window_ratio, 1.0f, 500.0f, projection);
 	//Rotate Cube
-	glm_rotate(identity, clock()/200000.0f, axis);
+	glm_rotate(identity, -M_PI/2, axis);
+
+	vec3 translation = {0.0, 0.0, -20.0};
+	glm_translate(identity, translation);
 
 	//Multiplication will be done on the GPU
 	glUniformMatrix4fv(shader_var_projection, 1, GL_FALSE, &projection[0][0]);
@@ -113,7 +117,7 @@ static void on_realize(GtkGLArea *glarea){
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
-	stl_model_init(&vertexbuffer, &normalbuffer, &vboSize,"assets/gear.stl");
+	stl_model_init(&stl_mesh,"assets/3DBenchy.stl");
 
 	/*---------------------------------*/
     /*       Init GTK stuff            */
@@ -138,11 +142,10 @@ static bool on_render(){
     glUseProgram(shaderID);
 	handle_perspective(transformation_matrix);
 	
-	vec3 mycolour = {0.9f, 0.9f, 0.0f};
 	glUniform3fv(colour_location, 1, mycolour);
 	// Clear canvas:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	stl_model_draw(vertexbuffer, normalbuffer, vboSize);
+	stl_model_draw(&stl_mesh);
     
     return true;
 }
@@ -190,12 +193,18 @@ static bool on_motion_notify (GtkWidget *widget, GdkEventMotion *event){
 static bool on_scroll (GtkWidget* widget, GdkEventScroll *event){
 	switch (event->direction)
 	{
-	case GDK_SCROLL_UP:
-		printf("Scroll Up");
+	case GDK_SCROLL_UP:{
+			mycolour[1] += 0.05;
+			if(mycolour[1] > 1.0)
+			mycolour[1] = 1.0;
+		}
 		break;
 
-	case GDK_SCROLL_DOWN:
-		printf("Scroll Down");
+	case GDK_SCROLL_DOWN:{
+			mycolour[1] -= 0.05;
+			if(mycolour[1] < 0.0)
+			mycolour[1] = 0.0;
+		}
 		break;
 
 	default:
@@ -248,8 +257,7 @@ int glwrap_init_gl(GtkWidget *window, GtkWidget *parentLayout){
 
 int glwrap_cleanup(){
 	free(movement_offset_buffer);
-    glDeleteBuffers(1, &vertexbuffer);
-	glDeleteBuffers(1, &normalbuffer);
+    stl_model_free(&stl_mesh);
     glDeleteVertexArrays(1, &vertexArrayID);
     glDeleteProgram(shaderID);
 }
