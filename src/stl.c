@@ -1,3 +1,4 @@
+#include <cglm/vec3.h>
 #include <stdint.h>
 #include <stl.h>
 #include <stdio.h>
@@ -25,6 +26,48 @@ static int vec3_to_int_2_10_10_10_rev(vec3 vector){
     result |= (int)(STL_GL_10_MAX * vector[0]) << 20;
     result |= (int)(0b11) << 30;
     return result;
+}
+
+static void offset_vector_generate(float *vertexdata, size_t vertices, ivec3 result){
+    ivec3 minbuff = {0, 0, 0};
+    ivec3 maxbuff = {0, 0, 0};
+
+    for(int v = 0; v < vertices * 3; v++){
+        switch (v%3) {
+        case STL_VTX_MOD_X:{
+            if(vertexdata[v] > maxbuff[0])
+            maxbuff[0] = vertexdata[v];
+            else if(vertexdata[v] < minbuff[0])
+            minbuff[0] = vertexdata[v];
+        } break;
+        case STL_VTX_MOD_Y:{
+            if(vertexdata[v] > maxbuff[1])
+            maxbuff[1] = vertexdata[v];
+            else if(vertexdata[v] < minbuff[1])
+            minbuff[1] = vertexdata[v];
+        } break;
+        case STL_VTX_MOD_Z:{
+            if(vertexdata[v] > maxbuff[2])
+            maxbuff[2] = vertexdata[v];
+            else if(vertexdata[v] < minbuff[2])
+            minbuff[2] = vertexdata[v];
+        } break;
+        default: break;
+        }
+    }
+
+    result[0] = (maxbuff[0] + minbuff[0])/2;
+    result[1] = (maxbuff[1] + minbuff[1])/2;
+    result[2] = (maxbuff[2] + minbuff[2])/2;
+}
+
+void stl_create_vao(struct MetaSTL* meta){
+    glGenVertexArrays(1, &meta->vao);
+	glBindVertexArray(meta->vao);
+}
+
+void stl_delete_vao(struct MetaSTL* meta){
+    glDeleteVertexArrays(1, &meta->vao);
 }
 
 int stl_model_init(struct MetaSTL* meta, const char *filename){
@@ -84,6 +127,9 @@ int stl_model_init(struct MetaSTL* meta, const char *filename){
         }
 
         printf("[%s] STL %s:\n\tIt has %d vertices\n",TAG, header, number_of_vertices);
+        //ivec3 offsets = {0,0,0};
+        offset_vector_generate(vertex_buffer, number_of_vertices, meta->center_offset);
+        printf("[%s] ivec3 is: %d %d %d\n", TAG, meta->center_offset[0], meta->center_offset[1], meta->center_offset[2]);
 
         glGenBuffers(1, &meta->vertexbuffer);
 	    glBindBuffer(GL_ARRAY_BUFFER, meta->vertexbuffer);
@@ -104,8 +150,8 @@ int stl_model_init(struct MetaSTL* meta, const char *filename){
         );
 
         fclose(stlfp);
-        free(vertex_buffer);
         free(normals_buffer);
+        free(vertex_buffer);
     }else{
         errno = EIO;
         return EXIT_FAILURE;
@@ -118,6 +164,11 @@ int stl_model_init(struct MetaSTL* meta, const char *filename){
 
 
 void stl_model_draw(struct MetaSTL* meta){
+    if(!meta->success)
+    return;
+
+    glEnable(GL_CULL_FACE);
+    glBindVertexArray(meta->vao);
     /*---------------------------------*/
     /*       Render Vertices           */
     /*---------------------------------*/

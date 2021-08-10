@@ -27,10 +27,14 @@ void stl_recon();
 
 struct MetaSTL{
     size_t vertices;
+    GLuint vao;
     GLuint vertexbuffer, normalbuffer;
-    vec3 center_offset;
+    ivec3 center_offset;
     bool success;
 };
+
+void stl_create_vao(struct MetaSTL* meta);
+void stl_delete_vao(struct MetaSTL* meta);
 
 int stl_model_init(struct MetaSTL* meta, const char *filename);
 void stl_model_draw(struct MetaSTL* meta);

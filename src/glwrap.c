@@ -16,11 +16,9 @@ static const char* TAG = "GTK GL";
 static char stl_filename[128] = "";
 
 static struct MetaSTL stl_mesh;
-static GLuint colour_location;
 
 static GLuint shaderID;
 static GLuint shader_var_projection, shader_var_view, shader_var_model, shader_var_viewPos;
-static GLuint vertexArrayID;
 static GLfloat window_ratio = 1.0;
 static GLuint window_width = APP_WIDTH, window_height = APP_HEIGHT;
 static clock_t previousRenderTime = 0;
@@ -35,8 +33,9 @@ static float movement_angle_vertical = 0.0f;
 
 static double tentativeOriginX = 0, tentativeOriginY = 0;
 static bool clicked = false;
-static vec3 mycolour = {0.9f, 0.9f, 0.0f};
-static vec3 translation = {0.0, 0.0, -20.0};
+
+static vec2 mouse_rotation = {0.0f, 0.0f};
+static float scale_factor = 1.0f;
 
 // Hold init data for GTK signals:
 struct signal {
@@ -60,24 +59,38 @@ static void dump_mat4(float *mat, const char* title){
 }
 
 static void handle_perspective(mat4 transform){
-	vec3 eye = {60,45,-45};
+	vec3 eye = {60,0,0};
+	eye[0] *= scale_factor;
 	vec3 direction = {0,0,0};
 	vec3 up = {0,1,0};
 
 	vec3 axis = {1.0f, 0.0f, 0.0f};
-	mat4 identity, view, projection, buffer;
-	glm_mat4_identity(identity);
+	mat4 model, view, projection, buffer;
+	glm_mat4_identity(model);
+
 	glm_lookat(eye, direction, up, view);
+
+	vec3 rotataxisx = {0.0f, 1.0f, 0.0f};
+	vec3 rotataxisy = {0.0f, 0.0f, 1.0f};
+
+	glm_rotate(view, mouse_rotation[0], rotataxisx);
+	glm_rotate(view, mouse_rotation[1], rotataxisy);
+
 	glm_perspective(M_PI/4, window_ratio, 1.0f, 500.0f, projection);
 	//Rotate Cube
-	glm_rotate(identity, -M_PI/2, axis);
+	glm_rotate(model, -M_PI/2, axis);
 
-	glm_translate(identity, translation);
+	vec3 translation = {
+		stl_mesh.center_offset[0],
+		stl_mesh.center_offset[1],
+		-stl_mesh.center_offset[2]
+	};
+	glm_translate(model, translation);
 
 	//Multiplication will be done on the GPU
 	glUniformMatrix4fv(shader_var_projection, 1, GL_FALSE, &projection[0][0]);
 	glUniformMatrix4fv(shader_var_view, 1, GL_FALSE, &view[0][0]);
-	glUniformMatrix4fv(shader_var_model, 1, GL_FALSE, &identity[0][0]);
+	glUniformMatrix4fv(shader_var_model, 1, GL_FALSE, &model[0][0]);
 	glUniform3fv(shader_var_viewPos, 1, eye);
 }
 
@@ -106,9 +119,9 @@ static void on_realize(GtkGLArea *glarea){
 	glClearColor(0.4f, 0.0f, 0.4f, 0.0f);
 	// Performace upgrade
 	glEnable(GL_CULL_FACE);
-    //Test Triangle
-	glGenVertexArrays(1, &vertexArrayID);
-	glBindVertexArray(vertexArrayID);
+
+	//create main VAO
+	stl_create_vao(&stl_mesh);
 
     shaderID = glshader_load( "../shaders/vertexshd1.glsl", "../shaders/fragmentshd1.glsl" );
 	shader_var_projection = glGetUniformLocation(shaderID, "projection");
@@ -116,7 +129,7 @@ static void on_realize(GtkGLArea *glarea){
 	shader_var_model = glGetUniformLocation(shaderID, "model");
 	shader_var_viewPos = glGetUniformLocation(shaderID, "viewPos");
 
-	colour_location = glGetUniformLocation(shaderID, "material_colour");
+	//scale_location = glGetUniformLocation(shaderID, "material_colour");
 	/*---------------------------------*/
     /*       Initialize Buffers        */
     /*---------------------------------*/
@@ -141,15 +154,16 @@ static void on_realize(GtkGLArea *glarea){
 }
 
 static bool on_render(){
+	// Clear canvas:
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	mat4 transformation_matrix;
     glUseProgram(shaderID);
 	handle_perspective(transformation_matrix);
 	
-	glUniform3fv(colour_location, 1, mycolour);
-	// Clear canvas:
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glUniform3fv(scale_location, 1, scale_factor);
+	
 	stl_model_draw(&stl_mesh);
-    
     return true;
 }
 
@@ -177,8 +191,16 @@ static bool on_button_release (GtkWidget *widget, GdkEventButton *event){
 
 static bool on_motion_notify (GtkWidget *widget, GdkEventMotion *event){
 	if(clicked){
-		translation[0] += (tentativeOriginX - event->x)/1000.0;
-		translation[2] += (tentativeOriginY - event->y)/1000.0;
+		//translation[0] += (tentativeOriginX - event->x)/1000.0;
+		//translation[2] += (tentativeOriginY - event->y)/1000.0;
+		mouse_rotation[0] -= (tentativeOriginX - event->x)* 0.02;
+		if(abs(mouse_rotation[0] > M_PI / 2))
+		mouse_rotation[1] += ((tentativeOriginY - event->y)* 0.02);
+		else
+		mouse_rotation[1] -= ((tentativeOriginY - event->y)* 0.02);
+
+		tentativeOriginX = event->x;
+		tentativeOriginY = event->y;
 	}
 	return FALSE;
 }
@@ -187,16 +209,12 @@ static bool on_scroll (GtkWidget* widget, GdkEventScroll *event){
 	switch (event->direction)
 	{
 	case GDK_SCROLL_UP:{
-			mycolour[1] += 0.05;
-			if(mycolour[1] > 1.0)
-			mycolour[1] = 1.0;
+			scale_factor *= 1 + GL_WRAP_SCROLL_FACTOR;
 		}
 		break;
 
 	case GDK_SCROLL_DOWN:{
-			mycolour[1] -= 0.05;
-			if(mycolour[1] < 0.0)
-			mycolour[1] = 0.0;
+			scale_factor *= 1 - GL_WRAP_SCROLL_FACTOR;
 		}
 		break;
 
@@ -252,6 +270,6 @@ int glwrap_init_gl(const char* filename, GtkWidget *window, GtkWidget *parentLay
 
 int glwrap_cleanup(){
     stl_model_free(&stl_mesh);
-    glDeleteVertexArrays(1, &vertexArrayID);
+	stl_delete_vao(&stl_mesh);
     glDeleteProgram(shaderID);
 }

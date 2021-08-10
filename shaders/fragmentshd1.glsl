@@ -1,6 +1,6 @@
 #version 330 core
 
-uniform vec3 material_colour;
+//uniform vec3 material_colour;
 uniform vec3 viewPos;
 
 in vec3 normal;
@@ -10,6 +10,7 @@ in vec3 fragPos;
 out vec4 color;
 
 void main(){
+	vec3 material_colour = vec3(0.2, 0.6, 0.4);
 	vec3 lightPos = vec3(12.0f, 10.0f, 20.0f);
 	vec3 lightColour = vec3(1,1,1);
 

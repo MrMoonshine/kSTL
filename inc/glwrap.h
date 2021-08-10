@@ -14,10 +14,9 @@
 
 #include <stl.h>
 #include <glshader.h>
-#include <gmouse.h>
+#include <gizmo.h>
 
-#define GL_WRAP_SCROLL_FACTOR_GROW (6.0/5.0)
-#define GL_WRAP_SCROLL_FACTOR_SHRINK (5.0/6.0)
+#define GL_WRAP_SCROLL_FACTOR (1.0f/50.0f)
 
 /*typedef struct MetaGL{
     GLuint shader;

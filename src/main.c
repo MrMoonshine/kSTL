@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]) {
     //stl_recon();
-    GtkWidget *window;
+    GtkWindow *window;
     GtkWidget *vbox;
 
     gtk_init(&argc, &argv);
