@@ -1,78 +1,63 @@
+cmake_minimum_required(VERSION 3.1.0)
 
-cmake_minimum_required(VERSION 3.10)
-
-project(kSTL C)
+project(kSTL)
 
 add_definitions(
     -DAPP_TITLE="kSTL"
-    -DAPP_HEIGHT=600
-    -DAPP_WIDTH=800
+    -DDEFAULT_APP_HEIGHT=600
+    -DDEFAULT_APP_WIDTH=800
     -DTEST_IMAGE="/home/david/Bilder/carBackground/67e77813c76ba4e924d2abcd952820fc.jpg"
 )
 
-file(GLOB SRC_FILES
-    "src/*.c"
+file(GLOB SRC_DIR
+    "src/*.cpp"
+    "inc/*.hpp"
 )
 
-file(GLOB HDR_FILES
-    "inc/*.h"
+file(GLOB INC_DIR
+    ./inc
 )
 
-# some test warning levels for GCC
-set(WARNING_LEVELS_GCC
-    -Werror
-    -Wno-deprecated
-)
-set(WARNING_LEVELS_GCC_DEBUG
-    -Wno-deprecated
-)  
+include(FeatureSummary)
 
-#add_executable(${PROJECT_NAME} ${THIS_DIR})
-set(CMAKE_WARN_DEPRECATED FALSE)
-set(CMAKE_C_COMPILER gcc)
+set(QT5_MIN_VERSION 5.12)
+set(KF5_MIN_VERSION 5.65)
 
-#find further libraries: dpkg -L libglfw3
-#GTK
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-# Setup CMake to use GTK+, tell the compiler where to look for headers
-# and to the linker where to look for libraries
-include_directories(${GTK3_INCLUDE_DIRS})
-link_directories(${GTK3_LIBRARY_DIRS})
-# Add other flags to the compiler
-add_definitions(${GTK3_CFLAGS_OTHER})
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
 
-set(OpenGL_GL_PREFERENCE LEGACY)
-find_package(OpenGL REQUIRED)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
 
-find_package(GLEW REQUIRED)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-if (NOT OpenGL_OpenGL_FOUND)
-    message (FATAL_ERROR "OpenGL not found")
-endif ()
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-#CGLM
-add_library(cglm SHARED IMPORTED) # or STATIC instead of SHARED
-set_target_properties(cglm PROPERTIES
-  IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libcglm.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/cglm"
-)
-#open libm
-add_library(openlibm SHARED IMPORTED) # or STATIC instead of SHARED
-set_target_properties(openlibm PROPERTIES
-  IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libopenlibm.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/openlibm"
-)
+if(CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
 
-include_directories(
-    /usr/include/
-	./inc/
-)
+find_package(Qt5 ${QT5_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml QuickControls2 Svg)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 I18n)
 
-add_executable (${PROJECT_NAME} ${SRC_FILES})
+set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-arcs -ftest-coverage")
 
-target_link_libraries(${PROJECT_NAME} OpenGL::GL)
-target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
-target_link_libraries(${PROJECT_NAME} openlibm)
-target_link_libraries(${PROJECT_NAME} cglm)
-target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
+include_directories(${INC_DIR})
+#Include files must be sadly added as executable to be recognised by the MOC
+add_executable(${PROJECT_NAME} ${SRC_DIR})
+
+target_link_libraries(${PROJECT_NAME}
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Qml
+    Qt5::Quick
+    Qt5::QuickControls2
+    Qt5::Svg
+    KF5::I18n)
+install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+
+#install(PROGRAMS org.kde.kstl.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+#install(FILES org.kde.kstl.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
