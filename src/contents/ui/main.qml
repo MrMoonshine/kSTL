@@ -13,53 +13,61 @@ Kirigami.ApplicationWindow {
     id: root
 
     // Window title
+    title: "kSTL"
     // i18nc is useful for adding context for translators, also lets strings be changed for different languages
-    title: i18nc("@title:window", "kSTL")
-    
-    menuBar: MenuBar {
-        Menu {
-            title: i18n("&File")
-            Action {
-                text: i18n("&Open...")
-                shortcut: "Ctrl+O"
-                icon.name: "file-open"
+    globalDrawer: Kirigami.GlobalDrawer {
+        isMenu: false
+        actions: [
+            Kirigami.Action {
+                text: i18n("Quit")
+                icon.name: "gtk-quit"
+                shortcut: StandardKey.Quit
+                onTriggered: Qt.quit()
+            },
+            Kirigami.Action {
+                text: i18n("About")
+                icon.name: "gtk-about"
+                onTriggered: showPassiveNotification(i18n("About information"))
             }
-            Action { 
-                text: i18n("&Screenshot")
-                icon.name: "window-new"
-            }
-            Action {
-                text: i18n("&Export")
-                icon.name: "applications-engineering"
-            }
-        }
-        Menu {
-            title: i18n("&Edit")
-            Action { text: i18n("&Merge contacts") }
-            Action { text: i18n("&Search dupplicate contacts") }
-            Action { text: i18n("&Export") }
-        }
-        Menu {
-            title: i18n("&Settings")
-            Action { text: i18n("&Settings") }
-            Action { text: i18n("&Configure shortcuts") }
-        }
-        Menu {
-            title: i18n("&Help")
-            Action { text: i18n("&Report Bug...") }
-            Action { text: i18n("&Donate") }
-            Action { text: i18n("&About Addressbook") }
-            Action { text: i18n("&About KDE") }
-        }
+        ]
     }
 
     // Initial page to be loaded on app load
     pageStack.initialPage: Kirigami.Page {
-
+        title: "kSTL"
+        actions {
+                main: Kirigami.Action {
+                    text: i18n("Open")
+                    iconName: "folder-open"
+                    shortcut: StandardKey.Open
+                    onTriggered: showPassiveNotification(i18n("Open File Action"))
+                }
+                left: Kirigami.Action {
+                    text: i18n("Material Colour")
+                    iconName: "preferences-desktop-theme"
+                    onTriggered: showPassiveNotification(i18n("Colour Select"))
+                }
+                right: Kirigami.Action {
+                    icon.name: "network-offline"
+                    onTriggered: showPassiveNotification(i18n("Right action triggered"))
+                }
+                contextualActions: [
+                    Kirigami.Action {
+                        text: i18n("W.I.P Action 1")
+                        icon.name: "network-offline"
+                        onTriggered: showPassiveNotification(i18n("Contextual action 1 clicked"))
+                    },
+                    Kirigami.Action {
+                        text: i18n("W.I.P Action 2")
+                        icon.name: "network-offline"
+                        enabled: false
+                    }
+                ]
+            }
         Controls.Label {
             // Center label horizontally and vertically within parent element
             anchors.centerIn: parent
-            text: i18n("Hello World!")
+            text: i18n("I will be Vulkan :3!")
         }
     }
 }

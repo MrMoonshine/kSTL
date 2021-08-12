@@ -18,6 +18,10 @@ file(GLOB INC_DIR
     ./inc
 )
 
+file(GLOB RSRC_FILES
+    src/resources.qrc
+)
+
 include(FeatureSummary)
 
 set(QT5_MIN_VERSION 5.12)
@@ -45,7 +49,7 @@ set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-arcs -ftest-c
 
 include_directories(${INC_DIR})
 #Include files must be sadly added as executable to be recognised by the MOC
-add_executable(${PROJECT_NAME} ${SRC_DIR})
+add_executable(${PROJECT_NAME} ${SRC_DIR} ${RSRC_FILES})
 
 target_link_libraries(${PROJECT_NAME}
     Qt5::Core
@@ -54,7 +58,8 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Quick
     Qt5::QuickControls2
     Qt5::Svg
-    KF5::I18n)
+    KF5::I18n
+)
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 
 #install(PROGRAMS org.kde.kstl.desktop DESTINATION ${KDE_INSTALL_APPDIR})
