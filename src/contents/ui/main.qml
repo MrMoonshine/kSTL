@@ -11,9 +11,10 @@ import org.kde.kirigami 2.13 as Kirigami
 Kirigami.ApplicationWindow {
     // ID provides unique identifier to reference this element
     id: root
-
+    objectName: "root"
     // Window title
     title: "kSTL"
+
     // i18nc is useful for adding context for translators, also lets strings be changed for different languages
     globalDrawer: Kirigami.GlobalDrawer {
         isMenu: false
@@ -135,7 +136,7 @@ Kirigami.ApplicationWindow {
             rowSpacing: Kirigami.Units.largeSpacing
             columnSpacing: Kirigami.Units.largeSpacing
             columns: 1
-            height:mainPage.implicitContentHeight
+
             ColumnLayout {
                 Kirigami.InlineMessage {
                     Layout.fillWidth: true
@@ -155,6 +156,7 @@ Kirigami.ApplicationWindow {
                  Layout.fillWidth: true
                  Layout.fillHeight: true
                  id:vulkanRenderSpace
+                 objectName: "vulkanRenderSpace"
                  source: "file:///home/david/Bilder/test.jpg"
                 }
             }

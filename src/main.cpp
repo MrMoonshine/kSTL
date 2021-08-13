@@ -3,6 +3,8 @@
 #include <QtQml>
 #include <QUrl>
 #include <QIcon>
+#include <QQuickView>
+#include <QQuickItem>
 
 #include <KLocalizedContext>
 #include <KLocalizedString>
@@ -20,12 +22,21 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     KLocalizedString::setApplicationDomain("kSTL");
 
     QQmlApplicationEngine engine;
-
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         return -1;
+    }
+
+    QObject* rootObject = engine.rootObjects().first();
+    QQuickItem *item = rootObject->findChild< QQuickItem *>("vulkanRenderSpace");
+    if (item){
+        item->setProperty("title", "Oida");
+        item->setRotation(30);
+    }
+    else{
+        qWarning() << "Requested QML element not found";
     }
 
     return app.exec();
