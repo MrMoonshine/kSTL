@@ -1,4 +1,3 @@
-<!DOCTYPE RCC>
 <RCC>
     <qresource prefix="/">
         <file alias="main.qml">contents/ui/main.qml</file>

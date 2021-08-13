@@ -1,11 +1,11 @@
 // Includes relevant modules used by the QML
 import QtQml 2.15
 import QtQuick 2.14
+import QtQuick.Dialogs 1.0
 import QtQuick.Controls 2.15
 import QtQuick.Controls 2.15 as Controls
 import QtQuick.Layouts 1.14
 import org.kde.kirigami 2.13 as Kirigami
-
 
 // Base element, provides basic features needed for all kirigami applications
 Kirigami.ApplicationWindow {
@@ -32,9 +32,70 @@ Kirigami.ApplicationWindow {
         ]
     }
 
+    //Color Picker
+    ColorDialog {
+        id: colorDialog
+        title: "Select your material color"
+        color: Kirigami.Theme.highlightColor
+        onAccepted: {
+            console.log("Material Color is: " + colorDialog.color)
+        }
+        onRejected: {
+            console.log("No color selected")
+        }
+    }
+
+
+    Kirigami.OverlaySheet {
+            id: metaSheet
+            header: Kirigami.Heading{
+                text: i18n("Meta Informations")
+                level: 1
+            }
+
+            GridLayout{
+                id: metaInformationsLayout
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    right: parent.right
+                }
+                rowSpacing: Kirigami.Units.largeSpacing
+                columnSpacing: Kirigami.Units.largeSpacing
+                columns: 1
+                ColumnLayout {
+                    Kirigami.Heading {
+                      text: i18n("Filename")
+                      level: 3
+                    }
+                    Controls.Label{
+                        text: "none"
+                        color: Kirigami.Theme.disabledTextColor
+                    }
+                    Kirigami.Heading {
+                      text: i18n("File Size")
+                      level: 3
+                    }
+                    Controls.Label{
+                        text: "none"
+                        color: Kirigami.Theme.disabledTextColor
+                    }
+                    Kirigami.Heading {
+                      text: i18n("Vertices")
+                      level: 3
+                    }
+                    Controls.Label{
+                        text: "0"
+                        color: Kirigami.Theme.disabledTextColor
+                    }
+                }
+            }
+        }
+
     // Initial page to be loaded on app load
     pageStack.initialPage: Kirigami.Page {
         title: "kSTL"
+        id: mainPage
         actions {
                 main: Kirigami.Action {
                     text: i18n("Open")
@@ -43,13 +104,13 @@ Kirigami.ApplicationWindow {
                     onTriggered: showPassiveNotification(i18n("Open File Action"))
                 }
                 left: Kirigami.Action {
-                    text: i18n("Material Colour")
+                    text: i18n("Material color")
                     iconName: "preferences-desktop-theme"
-                    onTriggered: showPassiveNotification(i18n("Colour Select"))
+                    onTriggered: colorDialog.open()
                 }
                 right: Kirigami.Action {
-                    icon.name: "network-offline"
-                    onTriggered: showPassiveNotification(i18n("Right action triggered"))
+                    icon.name: "dialog-information"
+                    onTriggered: metaSheet.open()
                 }
                 contextualActions: [
                     Kirigami.Action {
@@ -64,10 +125,39 @@ Kirigami.ApplicationWindow {
                     }
                 ]
             }
-        Controls.Label {
-            // Center label horizontally and vertically within parent element
-            anchors.centerIn: parent
-            text: i18n("I will be Vulkan :3!")
+        GridLayout{
+            id: mainContentLayout
+            anchors {
+                left: parent.left
+                top: parent.top
+                right: parent.right
+            }
+            rowSpacing: Kirigami.Units.largeSpacing
+            columnSpacing: Kirigami.Units.largeSpacing
+            columns: 1
+            height:mainPage.implicitContentHeight
+            ColumnLayout {
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    text: "Invalid STL mesh"
+                    type: Kirigami.MessageType.Warning
+                    visible: true
+                }
+
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    text: "Fatal error while loading STL file"
+                    type: Kirigami.MessageType.Error
+                    visible: true
+                }
+
+                Image{
+                 Layout.fillWidth: true
+                 Layout.fillHeight: true
+                 id:vulkanRenderSpace
+                 source: "file:///home/david/Bilder/test.jpg"
+                }
+            }
         }
     }
 }
