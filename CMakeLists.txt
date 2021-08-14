@@ -6,6 +6,8 @@ add_definitions(
     -DAPP_TITLE="kSTL"
     -DDEFAULT_APP_HEIGHT=600
     -DDEFAULT_APP_WIDTH=800
+    -DDEFAULT_RENDER_HEIGHT=1600
+    -DDEFAULT_RENDER_WIDTH=900
     -DTEST_IMAGE="/home/david/Bilder/carBackground/67e77813c76ba4e924d2abcd952820fc.jpg"
 )
 

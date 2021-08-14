@@ -7,7 +7,8 @@ import QtQuick.Controls 2.15 as Controls
 import QtQuick.Layouts 1.14
 import org.kde.kirigami 2.13 as Kirigami
 //Custom Instances
-import kSTL.aboutData 1.0
+import kSTL 1.0
+//import kSTL.testbackend 1.0
 // Base element, provides basic features needed for all kirigami applications
 Kirigami.ApplicationWindow {
     // ID provides unique identifier to reference this element
@@ -160,13 +161,33 @@ Kirigami.ApplicationWindow {
                     visible: true
                 }
 
-                Image{
+                Controls.Label{
+                    text: Backend.introductionText
+                }
+
+                 Image {
+                     Layout.fillWidth: true
+                     Layout.fillHeight: true
+                     source: "image://myprovider/500/500/"
+                 }
+                /*Canvas {
+                    id: renderArea
+                    width: mainPage.width
+                    height: 200
+                    onPaint: {
+                        var ctx = getContext("2d");
+                        ctx.fillStyle = Qt.rgba(1, 0, 0, 1);
+                        ctx.fillRect(0, 0, width, height);
+                    }
+                }*/
+
+                /*Image{
                  Layout.fillWidth: true
                  Layout.fillHeight: true
                  id:vulkanRenderSpace
                  objectName: "vulkanRenderSpace"
                  source: "file:///home/david/Bilder/test.jpg"
-                }
+                }*/
             }
         }
     }
