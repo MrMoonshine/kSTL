@@ -43,11 +43,19 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 find_package(Qt5 ${QT5_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml QuickControls2 Svg)
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 I18n)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons I18n)
+
+include(FeatureSummary)
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(ECMPoQmTools)
+include(ECMQMLModules)
 
 set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-arcs -ftest-coverage")
 
 include_directories(${INC_DIR})
+
 #Include files must be sadly added as executable to be recognised by the MOC
 add_executable(${PROJECT_NAME} ${SRC_DIR} ${RSRC_FILES})
 
@@ -59,6 +67,8 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::QuickControls2
     Qt5::Svg
     KF5::I18n
+    KF5::Kirigami2
+    KF5::CoreAddons
 )
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 

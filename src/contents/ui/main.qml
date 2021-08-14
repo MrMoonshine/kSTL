@@ -6,7 +6,8 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls 2.15 as Controls
 import QtQuick.Layouts 1.14
 import org.kde.kirigami 2.13 as Kirigami
-
+//Custom Instances
+import kSTL.aboutData 1.0
 // Base element, provides basic features needed for all kirigami applications
 Kirigami.ApplicationWindow {
     // ID provides unique identifier to reference this element
@@ -14,7 +15,6 @@ Kirigami.ApplicationWindow {
     objectName: "root"
     // Window title
     title: "kSTL"
-
     // i18nc is useful for adding context for translators, also lets strings be changed for different languages
     globalDrawer: Kirigami.GlobalDrawer {
         isMenu: false
@@ -28,10 +28,18 @@ Kirigami.ApplicationWindow {
             Kirigami.Action {
                 text: i18n("About")
                 icon.name: "gtk-about"
-                onTriggered: showPassiveNotification(i18n("About information"))
+                onTriggered: pageStack.layers.push(aboutPage)
             }
         ]
     }
+    //About page.
+    Component {
+            id: aboutPage
+
+            Kirigami.AboutPage {
+                aboutData: Controller.aboutData
+            }
+        }
 
     //Color Picker
     ColorDialog {
