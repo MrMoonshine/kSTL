@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file alias="main.qml">contents/ui/main.qml</file>
+        <file alias="squircle.frag.spv">shaders/squircle.frag.spv</file>
+        <file alias="squircle.vert.spv">shaders/squircle.vert.spv</file>
     </qresource>
 </RCC>

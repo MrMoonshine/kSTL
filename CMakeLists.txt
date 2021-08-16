@@ -45,7 +45,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 find_package(Qt5 ${QT5_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml QuickControls2 Svg)
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons I18n)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons I18n KIO)
 
 include(FeatureSummary)
 include(KDEInstallDirs)
@@ -71,6 +71,9 @@ target_link_libraries(${PROJECT_NAME}
     KF5::I18n
     KF5::Kirigami2
     KF5::CoreAddons
+    KF5::KIOCore
+    KF5::KIOWidgets
+
 )
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 

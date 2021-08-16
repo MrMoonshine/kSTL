@@ -5,10 +5,11 @@ import QtQuick.Dialogs 1.0
 import QtQuick.Controls 2.15
 import QtQuick.Controls 2.15 as Controls
 import QtQuick.Layouts 1.14
+//KDE
 import org.kde.kirigami 2.13 as Kirigami
 //Custom Instances
 import kSTL 1.0
-//import kSTL.testbackend 1.0
+
 // Base element, provides basic features needed for all kirigami applications
 Kirigami.ApplicationWindow {
     // ID provides unique identifier to reference this element
@@ -106,6 +107,8 @@ Kirigami.ApplicationWindow {
     pageStack.initialPage: Kirigami.Page {
         title: "kSTL"
         id: mainPage
+        //Page must be transparent to see underlying vulkan window
+        background: Qt.transparent
         actions {
                 main: Kirigami.Action {
                     text: i18n("Open")
@@ -161,33 +164,41 @@ Kirigami.ApplicationWindow {
                     visible: true
                 }
 
-                Controls.Label{
-                    text: Backend.introductionText
-                }
+                Item {
 
-                 Image {
-                     Layout.fillWidth: true
-                     Layout.fillHeight: true
-                     source: "image://myprovider/500/500/"
-                 }
-                /*Canvas {
-                    id: renderArea
-                    width: mainPage.width
-                    height: 200
-                    onPaint: {
-                        var ctx = getContext("2d");
-                        ctx.fillStyle = Qt.rgba(1, 0, 0, 1);
-                        ctx.fillRect(0, 0, width, height);
+                    //width: 320
+                    height: 480
+                    Layout.fillWidth: true
+
+                    VulkanRenderArea {
+                        SequentialAnimation on t {
+                            NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
+                            NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
+                            loops: Animation.Infinite
+                            running: true
+                        }
                     }
-                }*/
+                //! [1] //! [2]
+                    Rectangle {
+                        color: Qt.rgba(1, 1, 1, 0.7)
+                        radius: 10
+                        border.width: 1
+                        border.color: "white"
+                        anchors.fill: label
+                        anchors.margins: -10
+                    }
 
-                /*Image{
-                 Layout.fillWidth: true
-                 Layout.fillHeight: true
-                 id:vulkanRenderSpace
-                 objectName: "vulkanRenderSpace"
-                 source: "file:///home/david/Bilder/test.jpg"
-                }*/
+                    Text {
+                        id: label
+                        color: "black"
+                        wrapMode: Text.WordWrap
+                        text: "The background here is a squircle rendered with raw Vulkan using the beforeRendering() and beforeRenderPassRecording() signals in QQuickWindow. This text label and its border is rendered using QML"
+                        anchors.right: parent.right
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 20
+                    }
+                }
             }
         }
     }

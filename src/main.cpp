@@ -1,24 +1,18 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QGuiApplication>
 #include <QtQml>
 #include <QUrl>
 #include <QIcon>
 #include <QQuickView>
-#include <QQuickItem>
-#include <QtQuickWidgets/QQuickWidget>
-#include <QVBoxLayout>
-#include <QLabel>
 
 #include <KLocalizedContext>
 #include <KLocalizedString>
 #include <KAboutData>
 
-#include <QVulkanInstance>
-
 #include <controller.hpp>
-#include <backendtest.hpp>
-#include <renderarea.hpp>
-#include <vulkanwidget.hpp>
+#include <vulkanrenderarea.hpp>
+
 using namespace std;
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
@@ -26,16 +20,18 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
     app.setWindowIcon(QIcon::fromTheme("applications-engineering"));
-    /*QCoreApplication::setOrganizationName("NONE");
+    QCoreApplication::setOrganizationName("NONE");
     QCoreApplication::setOrganizationDomain("none");
     QCoreApplication::setApplicationName("kSTL");
-    KLocalizedString::setApplicationDomain("kSTL");*/
+    KLocalizedString::setApplicationDomain("kSTL");
     //Enable Vulkan
-    //QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+    //Register Render Space as QML type
+    qmlRegisterType<VulkanRenderArea>("kSTL", 1, 0, "VulkanRenderArea");
       /*---------------------------------*/
      /*          About Data             */
     /*---------------------------------*/
-    /*KAboutData aboutData(
+    KAboutData aboutData(
                 //Internal program name
                 QStringLiteral("kstl"),
                 //displayable program name
@@ -60,52 +56,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-
-    //RenderArea renderarea;
-    //engine.addImageProvider("myprovider", &renderarea);
-
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }
-
-    BackendTest backendtest;
-    qmlRegisterSingletonInstance<BackendTest>("kSTL", 1, 0, "Backend", &backendtest);
-
-    QObject* rootObject = engine.rootObjects().first();
-    QQuickItem *item = rootObject->findChild< QQuickItem *>("vulkanRenderSpace");
-    if (item){
-        item->setProperty("height", 300);
-        item->setRotation(30);
-    }
-    else{
-        qWarning() << "Requested QML element not found";
-    }*/
-
-    QVulkanInstance inst;
-
-    #ifndef Q_OS_ANDROID
-        inst.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-    #else
-        inst.setLayers(QByteArrayList()
-                       << "VK_LAYER_GOOGLE_threading"
-                       << "VK_LAYER_LUNARG_parameter_validation"
-                       << "VK_LAYER_LUNARG_object_tracker"
-                       << "VK_LAYER_LUNARG_core_validation"
-                       << "VK_LAYER_LUNARG_image"
-                       << "VK_LAYER_LUNARG_swapchain"
-                       << "VK_LAYER_GOOGLE_unique_objects");
-    #endif
-
-    if (!inst.create())
-    qFatal("Failed to create Vulkan instance: %d", inst.errorCode());
-
-    VulkanWidget vw;
-    vw.setVulkanInstance(&inst);
-
-    vw.resize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT);
-    vw.show();
-
     return app.exec();
 }
