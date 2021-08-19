@@ -1,10 +1,12 @@
 # kSTL
 ![good example](https://img.shields.io/badge/stability-Bleeding%20Edge-red.svg)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![good example](https://img.shields.io/badge/GUI-QML_Kirigami2-blue.svg)
+![good example](https://img.shields.io/badge/rendering-Vulkan-darkred.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-yellow.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-STL viewer for KDE
+kSTL is a STL Mesh viewer that fits perfectly into the environment of KDE Plasma.
 
 This application's dependencies are: 
 ```bash
-$ apt install libopenlibm3 libcglm0 libglew2.1 libgtk-3-0 -y
+not finished yet
 ```

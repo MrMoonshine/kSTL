@@ -108,7 +108,8 @@ Kirigami.ApplicationWindow {
         title: "kSTL"
         id: mainPage
         //Page must be transparent to see underlying vulkan window
-        background: Qt.transparent
+        background: null
+
         actions {
                 main: Kirigami.Action {
                     text: i18n("Open")
@@ -154,13 +155,20 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
                     text: "Invalid STL mesh"
                     type: Kirigami.MessageType.Warning
-                    visible: true
+                    visible: false
                 }
 
                 Kirigami.InlineMessage {
                     Layout.fillWidth: true
                     text: "Fatal error while loading STL file"
                     type: Kirigami.MessageType.Error
+                    visible: false
+                }
+
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    text: "The background here is a squircle rendered with raw Vulkan using the beforeRendering() and beforeRenderPassRecording() signals in QQuickWindow. This text label and its border is rendered using QML"
+                    type: Kirigami.MessageType.Information
                     visible: true
                 }
 
@@ -171,32 +179,12 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
 
                     VulkanRenderArea {
-                        SequentialAnimation on t {
+                        /*SequentialAnimation on t {
                             NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
                             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
                             loops: Animation.Infinite
                             running: true
-                        }
-                    }
-                //! [1] //! [2]
-                    Rectangle {
-                        color: Qt.rgba(1, 1, 1, 0.7)
-                        radius: 10
-                        border.width: 1
-                        border.color: "white"
-                        anchors.fill: label
-                        anchors.margins: -10
-                    }
-
-                    Text {
-                        id: label
-                        color: "black"
-                        wrapMode: Text.WordWrap
-                        text: "The background here is a squircle rendered with raw Vulkan using the beforeRendering() and beforeRenderPassRecording() signals in QQuickWindow. This text label and its border is rendered using QML"
-                        anchors.right: parent.right
-                        anchors.left: parent.left
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 20
+                        }*/
                     }
                 }
             }

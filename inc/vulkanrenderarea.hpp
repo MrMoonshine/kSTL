@@ -3,6 +3,8 @@
 
 #include <QQuickItem>
 #include <squirclerenderer.hpp>
+#include <model.hpp>
+#include <svulkanmeta.hpp>
 
 class VulkanRenderArea : public QQuickItem
 {
@@ -11,6 +13,7 @@ class VulkanRenderArea : public QQuickItem
     QML_ELEMENT
 public:
     VulkanRenderArea();
+    ~VulkanRenderArea();
 
     qreal t();
     void setT(qreal t);
@@ -28,7 +31,9 @@ private:
     void releaseResources() override;
 
     qreal mT = 0;
-    SquircleRenderer *mRenderer = nullptr;
+    SVulkanMeta meta;
+    //SquircleRenderer *mRenderer = nullptr;
+    Model *mModelRenderer = nullptr;
 };
 
 #endif // VULKANRENDERAREA_HPP
