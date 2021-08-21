@@ -87,12 +87,19 @@ void SquircleRenderer::init()
         m_program->bindAttributeLocation("vertices", 0);
         m_program->link();
 
+        mVaoShdr = new QOpenGLShaderProgram();
+        mVaoShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.vert");
+        mVaoShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.frag");
+
+        mVao = new SVao(mVaoShdr);
     }
 }
 
 SquircleRenderer::~SquircleRenderer()
 {
+    delete mVao;
     delete m_program;
+    delete mVaoShdr;
 }
 
 //! [4] //! [5]
@@ -101,8 +108,11 @@ void SquircleRenderer::paint()
     // Play nice with the RHI. Not strictly needed when the scenegraph uses
     // OpenGL directly.
     m_window->beginExternalCommands();
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    m_program->bind();
+    mVao->draw();
+    /*m_program->bind();
 
     m_program->enableAttributeArray(0);
 
@@ -127,11 +137,11 @@ void SquircleRenderer::paint()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 4);
 
     m_program->disableAttributeArray(0);
     m_program->release();
-
+*/
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
     m_window->resetOpenGLState();

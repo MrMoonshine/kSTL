@@ -5,7 +5,7 @@
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLFunctions>
 
-
+#include <svao.hpp>
 
 //! [1]
 class SquircleRenderer : public QObject, protected QOpenGLFunctions
@@ -27,6 +27,8 @@ private:
     QSize m_viewportSize;
     qreal m_t;
     QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram *mVaoShdr;
+    SVao *mVao;
     QQuickWindow *m_window;
 };
 
