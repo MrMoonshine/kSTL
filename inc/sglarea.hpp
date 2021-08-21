@@ -1,18 +1,19 @@
-#ifndef VULKANRENDERAREA_HPP
-#define VULKANRENDERAREA_HPP
+#ifndef SGLAREA_HPP
+#define SGLAREA_HPP
 
 #include <QQuickItem>
-#include <model.hpp>
-#include <svulkanmeta.hpp>
+#include <QRunnable>
+#include <QQuickWindow>
+#include <squirclerenderer.hpp>
 
-class VulkanRenderArea : public QQuickItem
+class SGlArea : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
     QML_ELEMENT
 public:
-    VulkanRenderArea();
-    ~VulkanRenderArea();
+    SGlArea();
+    ~SGlArea();
 
     qreal t();
     void setT(qreal t);
@@ -30,9 +31,7 @@ private:
     void releaseResources() override;
 
     qreal mT = 0;
-    SVulkanMeta meta;
-    //SquircleRenderer *mRenderer = nullptr;
-    Model *mModelRenderer = nullptr;
+    SquircleRenderer *mRenderer = nullptr;
 };
 
-#endif // VULKANRENDERAREA_HPP
+#endif // SGLAREA_HPP

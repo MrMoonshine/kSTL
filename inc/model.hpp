@@ -9,8 +9,12 @@
 #include <QVulkanFunctions>
 #include <QVulkanInstance>
 #include <QObject>
+#include <QtMath>
+#include <QMatrix4x4>
+#include <QVector3D>
 
 #include <svulkanmeta.hpp>
+#include <svkbuffer.hpp>
 #include <errorhandler.hpp>
 
 class Model : public QObject
@@ -19,7 +23,6 @@ class Model : public QObject
 public:
     Model(SVulkanMeta *meta);
     ~Model();
-    VkResult load();
     void setViewportSize(const QSize &size);
 
     static VkVertexInputBindingDescription bindingDescription();
@@ -44,23 +47,35 @@ protected:
     //Vulkan Data
     QSize mViewportSize;
     SVulkanMeta *mMeta;
-    VkBuffer mVertexBuffer = VK_NULL_HANDLE;
-    VkDeviceMemory mVbufMem = VK_NULL_HANDLE;
-    VkDeviceSize mAllocPerUbuf = 0;
 
-    VkDescriptorSetLayout mResLayout = VK_NULL_HANDLE;
+    //Vertex Buffer
+    SVkBuffer *vertexbuffer = nullptr;
+    //Index Buffers
+    SVkBuffer *uniformbuffer = nullptr;
+    //Descriptor set data
+    VkDescriptorSetLayout mDescriptorSetLayout;
+    VkDescriptorPool mDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSet mDescriptorSet = VK_NULL_HANDLE;
+    VkPipelineLayout mDescriptorPipelineLayout;
+
     VkPipelineLayout mPipelineLayout = VK_NULL_HANDLE;
     VkPipelineCache mPipelineCache = VK_NULL_HANDLE;
     VkPipeline mGraphicsPipeline = VK_NULL_HANDLE;
 
-    VkDescriptorPool mDescriptorPool = VK_NULL_HANDLE;
-    //VkDescriptorSet mUbufDescriptor = VK_NULL_HANDLE;
+    VkPipelineLayout mMeshPipelineLayout = VK_NULL_HANDLE;
 private:
     void init();
     void memoryInformation();
+    //Load all Vetex and Uniform Buffers
+    VkResult loadBuffers();
+    void createDescriptorSet();
+    void createConstatntsPipeline();
     void createGraphicsPipeline();
     //Helper Function
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    SUniformBufferObject ubo;
+    void updateUniformBuffer();
 };
 
 #endif // MODEL_HPP

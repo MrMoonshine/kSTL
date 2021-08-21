@@ -12,6 +12,7 @@
 
 #include <controller.hpp>
 #include <vulkanrenderarea.hpp>
+#include <sglarea.hpp>
 
 using namespace std;
 
@@ -25,9 +26,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("kSTL");
     KLocalizedString::setApplicationDomain("kSTL");
     //Enable Vulkan
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+    //QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     //Register Render Space as QML type
-    qmlRegisterType<VulkanRenderArea>("kSTL", 1, 0, "VulkanRenderArea");
+    qmlRegisterType<SGlArea>("kSTL", 1, 0, "GlRenderArea");
       /*---------------------------------*/
      /*          About Data             */
     /*---------------------------------*/

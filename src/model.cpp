@@ -40,6 +40,18 @@ static const float rawVertexBuffer[] = {
     -1.0f, 1.0f, 1.0f,
     1.0f,-1.0f, 1.0f
 };
+
+static void dumpMat4(float *m4, const char* title){
+    printf("----------------------------------------------\n");
+    printf("\t%s\n",title);
+    printf("----------------------------------------------\n");
+    for(int a = 0; a < 16; a++){
+        printf("%.2f\t", m4[a]);
+        if(a % 4 == 3)
+            printf("\n");
+    }
+    printf("----------------------------------------------\n");
+}
   /*---------------------------------*/
  /*     Constructor & Destructor    */
 /*---------------------------------*/
@@ -52,8 +64,20 @@ Model::~Model(){
     if(!mMeta->deviceFunctions())
         return;
 
-    mMeta->deviceFunctions()->vkDestroyBuffer(mMeta->device(), mVertexBuffer, NULL);
-    mMeta->deviceFunctions()->vkFreeMemory(mMeta->device(), mVbufMem, NULL);
+    //Free buffers
+    if(vertexbuffer)
+    delete vertexbuffer;
+    vertexbuffer = nullptr;
+
+    if(uniformbuffer)
+        delete uniformbuffer;
+    uniformbuffer = nullptr;
+
+    if(mMeshPipelineLayout)
+        mMeta->deviceFunctions()->vkDestroyPipelineLayout(mMeta->device(), mMeshPipelineLayout, NULL);
+
+    //Free descriptor set
+    //mMeta->deviceFunctions()->vkDestroyDescriptorSetLayout(mMeta->device(), mDescriptorSetLayout, NULL);
 }
   /*---------------------------------*/
  /*        Member Functions         */
@@ -76,46 +100,131 @@ uint32_t Model::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags proper
     return 0;
 }
 
-VkResult Model::load(){
-    /*---------------------------------*/
-   /*          Buffer Setup           */
-  /*---------------------------------*/
-    mBuffersLoaded = true;
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = rawVertexbufferSize;
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+VkResult Model::loadBuffers(){
+    vertexbuffer = new SVkBuffer(mMeta);
+    vertexbuffer->create(rawVertexbufferSize);
+    vertexbuffer->writeData(rawVertexBuffer);
+    ErrorHandle::logI(TAG, "Vertexbuffer setup sucessful!");
 
-    if (mMeta->deviceFunctions()->vkCreateBuffer(mMeta->device(), &bufferInfo, nullptr, &mVertexBuffer) != VK_SUCCESS) {
-        ErrorHandle::logE(TAG, "failed to create vertex buffer!");
-        abort();
-    }
-
-    VkMemoryRequirements memRequirements;
-    mMeta->deviceFunctions()->vkGetBufferMemoryRequirements(mMeta->device(), mVertexBuffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    if(mMeta->deviceFunctions()->vkAllocateMemory(mMeta->device(), &allocInfo, nullptr, &mVbufMem) != VK_SUCCESS){
-        ErrorHandle::logE(TAG, "Buffers setup sucessful!");
-        return VK_ERROR_UNKNOWN;
-    }
-    mMeta->deviceFunctions()->vkBindBufferMemory(mMeta->device(), mVertexBuffer, mVbufMem, 0);
-    /*---------------------------------*/
-   /*        Buffer Filling           */
-  /*---------------------------------*/
-    void* data;
-    mMeta->deviceFunctions()->vkMapMemory(mMeta->device(), mVbufMem, 0, bufferInfo.size, 0, &data);
-    memcpy(data, rawVertexBuffer, (size_t) bufferInfo.size);
-    mMeta->deviceFunctions()->vkUnmapMemory(mMeta->device(), mVbufMem);
-
-    //Finished
-    ErrorHandle::logI(TAG, "Buffers setup sucessful!");
+    uniformbuffer = new SVkBuffer(mMeta);
+    uniformbuffer->create(sizeof(SUniformBufferObject));
+    ErrorHandle::logI(TAG, "Uniformbuffer setup sucessful!");
     return VK_SUCCESS;
+}
+
+void Model::createConstatntsPipeline(){
+    VkPipelineLayoutCreateInfo meshPipelineLayoutInfo{};
+    meshPipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    meshPipelineLayoutInfo.pNext = nullptr;
+
+    //empty defaults
+    meshPipelineLayoutInfo.flags = 0;
+    meshPipelineLayoutInfo.setLayoutCount = 0;
+    meshPipelineLayoutInfo.pSetLayouts = nullptr;
+
+    VkPushConstantRange push_constant;
+    push_constant.offset = 0;
+    push_constant.size = sizeof(SUniformBufferObject);
+    push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    meshPipelineLayoutInfo.pushConstantRangeCount = 1;
+    meshPipelineLayoutInfo.pPushConstantRanges = &push_constant;
+
+    if(mMeta->deviceFunctions()->vkCreatePipelineLayout(mMeta->device(), &meshPipelineLayoutInfo, nullptr, &mMeshPipelineLayout) != VK_SUCCESS){
+        ErrorHandle::logE(TAG, "Mesh PipelineLayout creation failed");
+        return;
+    }
+}
+
+void Model::createDescriptorSet(){
+    VkResult err = VK_SUCCESS;
+
+    VkDescriptorSetLayoutBinding descLayoutBinding;
+    memset(&descLayoutBinding, 0, sizeof(descLayoutBinding));
+    descLayoutBinding.binding = 0;
+    descLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    descLayoutBinding.descriptorCount = 1;
+    descLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    VkDescriptorSetLayoutCreateInfo layoutInfo;
+    memset(&layoutInfo, 0, sizeof(layoutInfo));
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &descLayoutBinding;
+    err = mMeta->deviceFunctions()->vkCreateDescriptorSetLayout(mMeta->device(), &layoutInfo, nullptr, &mDescriptorSetLayout);
+    if (err != VK_SUCCESS)
+        qFatal("Failed to create descriptor set layout: %d", err);
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo;
+    memset(&pipelineLayoutInfo, 0, sizeof(pipelineLayoutInfo));
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &mDescriptorSetLayout;
+    err = mMeta->deviceFunctions()->vkCreatePipelineLayout(mMeta->device(), &pipelineLayoutInfo, nullptr, &mDescriptorPipelineLayout);
+    if (err != VK_SUCCESS)
+        ErrorHandle::logW(TAG,"Failed to create pipeline layout");
+
+    VkDescriptorPoolSize descPoolSizes[] = {
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 }
+    };
+    VkDescriptorPoolCreateInfo descPoolInfo;
+    memset(&descPoolInfo, 0, sizeof(descPoolInfo));
+    descPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descPoolInfo.flags = 0; // won't use vkFreeDescriptorSets
+    descPoolInfo.maxSets = 1;
+    descPoolInfo.poolSizeCount = sizeof(descPoolSizes) / sizeof(descPoolSizes[0]);
+    descPoolInfo.pPoolSizes = descPoolSizes;
+    err = mMeta->deviceFunctions()->vkCreateDescriptorPool(mMeta->device(), &descPoolInfo, nullptr, &mDescriptorPool);
+    if (err != VK_SUCCESS)
+        qFatal("Failed to create descriptor pool: %d", err);
+
+    VkDescriptorSetAllocateInfo descAllocInfo;
+    memset(&descAllocInfo, 0, sizeof(descAllocInfo));
+    descAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descAllocInfo.descriptorPool = mDescriptorPool;
+    descAllocInfo.descriptorSetCount = 1;
+    descAllocInfo.pSetLayouts = &mDescriptorSetLayout;
+    err = mMeta->deviceFunctions()->vkAllocateDescriptorSets(mMeta->device(), &descAllocInfo, &mDescriptorSet);
+    if (err != VK_SUCCESS)
+        qFatal("Failed to allocate descriptor set");
+
+    VkWriteDescriptorSet writeInfo;
+    memset(&writeInfo, 0, sizeof(writeInfo));
+    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo.dstSet = mDescriptorSet;
+    writeInfo.dstBinding = 0;
+    writeInfo.descriptorCount = 1;
+    writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+
+    VkDescriptorBufferInfo bufInfo;
+    bufInfo.buffer = *(uniformbuffer->buffer());
+    bufInfo.offset = 0; // dynamic offset is used so this is ignored
+    bufInfo.range = sizeof(SUniformBufferObject);
+    writeInfo.pBufferInfo = &bufInfo;
+    mMeta->deviceFunctions()->vkUpdateDescriptorSets(mMeta->device(), 1, &writeInfo, 0, nullptr);
+}
+
+void Model::updateUniformBuffer(){
+    QMatrix4x4 model, view, proj;
+    QVector3D eye(4, 3, 3);
+    QVector3D direction(0, 0, 0);
+    QVector3D up(0, 1, 0);
+
+    model.setToIdentity();
+    view.lookAt(eye, direction, up);
+    proj.perspective(
+                qDegreesToRadians(45.0f),
+                4.0f/3.0f,
+                0.1f,
+                100.0f
+    );
+
+    //Copy Matrices into buffer
+    memcpy(ubo.model, model.data(), S_MAT4X4_SIZE_RAW);
+    memcpy(ubo.view, view.data(), S_MAT4X4_SIZE_RAW);
+    memcpy(ubo.proj, proj.data(), S_MAT4X4_SIZE_RAW);
+
+    dumpMat4((model * view * proj).data(), "Model");
+    //uniformbuffer->writeData(&ubo);
 }
 
 void Model::prepareShader(Stage stage, QString filename){
@@ -152,32 +261,6 @@ void Model::createGraphicsPipeline(){
     pipelineCacheInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if(mMeta->deviceFunctions()->vkCreatePipelineCache(mMeta->device(), &pipelineCacheInfo, nullptr, &mPipelineCache) != VK_SUCCESS){
         ErrorHandle::logE(TAG, "Failed to create pipeline cache");
-        abort();
-    }
-
-    VkDescriptorSetLayoutBinding descLayoutBinding;
-    memset(&descLayoutBinding, 0, sizeof(descLayoutBinding));
-    descLayoutBinding.binding = 0;
-    descLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    descLayoutBinding.descriptorCount = 1;
-    descLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    VkDescriptorSetLayoutCreateInfo layoutInfo;
-    memset(&layoutInfo, 0, sizeof(layoutInfo));
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &descLayoutBinding;
-    if(mMeta->deviceFunctions()->vkCreateDescriptorSetLayout(mMeta->device(), &layoutInfo, nullptr, &mResLayout) != VK_SUCCESS){
-        ErrorHandle::logE(TAG, "Failed to create descriptor set layout");
-        abort();
-    }
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo;
-    memset(&pipelineLayoutInfo, 0, sizeof(pipelineLayoutInfo));
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &mResLayout;
-    if( mMeta->deviceFunctions()->vkCreatePipelineLayout(mMeta->device(), &pipelineLayoutInfo, nullptr, &mPipelineLayout) != VK_SUCCESS){
-        ErrorHandle::logE(TAG, "Failed to create pipeline layout");
         abort();
     }
 
@@ -299,7 +382,7 @@ void Model::frameStart(){
     Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::VulkanRhi);
 
     if (mVert.isEmpty())
-        prepareShader(VertexStage, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.vert.spv");
+        prepareShader(VertexStage, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/testConst.vert.spv");
     if (mFrag.isEmpty())
         prepareShader(FragmentStage, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.frag.spv");
 
@@ -307,16 +390,23 @@ void Model::frameStart(){
         mMeta->init(mMeta->window()->graphicsStateInfo().framesInFlight);
     if(!mInitialized)
         init();
-    if(!mBuffersLoaded)
-        load();
+    if(!mBuffersLoaded){
+        mBuffersLoaded = true;
+        loadBuffers();
+        //createDescriptorSet();
+        createConstatntsPipeline();
+    }
 }
 
 void Model::mainPassRecordingStart(){
     const QQuickWindow::GraphicsStateInfo &stateInfo(mMeta->window()->graphicsStateInfo());
+    updateUniformBuffer();
     QSGRendererInterface *rif = mMeta->window()->rendererInterface();
     // Must query the command buffer _after_ beginExternalCommands(), this is
     // actually important when running on Vulkan because what we get here is a
     // new secondary command buffer, not the primary one.
+    mMeta->window()->beginExternalCommands();
+
     VkCommandBuffer cb = *reinterpret_cast<VkCommandBuffer *>(
     rif->getResource(mMeta->window(), QSGRendererInterface::CommandListResource));
     Q_ASSERT(cb);
@@ -324,9 +414,17 @@ void Model::mainPassRecordingStart(){
     mMeta->deviceFunctions()->vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 
     VkDeviceSize vbufOffset = 0;
-    mMeta->deviceFunctions()->vkCmdBindVertexBuffers(cb, 0, 1, &mVertexBuffer, &vbufOffset);
+    mMeta->deviceFunctions()->vkCmdBindVertexBuffers(cb, 0, 1, vertexbuffer->buffer(), &vbufOffset);
 
+    VkViewport vp = { 0, 0, float(mViewportSize.width()), float(mViewportSize.height()), 0.0f, 1.0f };
+    mMeta->deviceFunctions()->vkCmdSetViewport(cb, 0, 1, &vp);
+    VkRect2D scissor = { { 0, 0 }, { uint32_t(mViewportSize.width()), uint32_t(mViewportSize.height()) } };
+    mMeta->deviceFunctions()->vkCmdSetScissor(cb, 0, 1, &scissor);
+
+    mMeta->deviceFunctions()->vkCmdPushConstants(cb, mMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SUniformBufferObject), &ubo);
     mMeta->deviceFunctions()->vkCmdDraw(cb, 12, 1, 0, 0);
+
+    mMeta->window()->endExternalCommands();
 }
   /*---------------------------------*/
  /*        Static Functions         */

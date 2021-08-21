@@ -6,8 +6,18 @@
 #include <QVulkanInstance>
 #include <QVulkanFunctions>
 #include <QUrl>
+#include <QMatrix4x4>
 
 #include <errorhandler.hpp>
+
+#define S_MAT4X4_SIZE 16
+#define S_MAT4X4_SIZE_RAW (16*sizeof(float))
+//Helper Struct for Vulkan description Sets
+struct SUniformBufferObject {
+    float model[S_MAT4X4_SIZE];
+    float view[S_MAT4X4_SIZE];
+    float proj[S_MAT4X4_SIZE];
+};
 
 class SVulkanMeta final
 {

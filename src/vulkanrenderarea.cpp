@@ -80,15 +80,6 @@ void VulkanRenderArea::handleWindowChanged(QQuickWindow *win){
     }
 }
 //Helper CLass
-class CleanupJob : public QRunnable
-{
-public:
-    CleanupJob(SquircleRenderer *renderer) : m_renderer(renderer) { }
-    void run() override { delete m_renderer; }
-private:
-    SquircleRenderer *m_renderer;
-};
-
 class CleanupModelJob : public QRunnable
 {
 public:
