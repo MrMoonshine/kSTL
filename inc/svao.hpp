@@ -12,21 +12,25 @@
 
 #include <QColor>
 
+
 class SVao : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
     explicit SVao(QOpenGLShaderProgram *program, QObject *parent = nullptr);
     ~SVao();
-    void draw();
+    virtual void draw();
+    void setViewportSize(QSize *size);
 protected:
     QOpenGLVertexArrayObject mVao;
     QOpenGLBuffer mVbo;
     QOpenGLShaderProgram *mProgram;
     void updateUniformBuffer();
     QMatrix4x4 model, view, proj;
+    QSize *mViewportSize = nullptr;
 private:
     QColor filamentColor;
+
 signals:
 
 };

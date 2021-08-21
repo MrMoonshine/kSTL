@@ -172,7 +172,7 @@ Kirigami.ApplicationWindow {
                     visible: true
                 }
 
-                Item {
+                MouseArea {
                     Layout.fillWidth: true;
                     height: 480;
 

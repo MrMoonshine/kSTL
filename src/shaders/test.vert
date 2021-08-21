@@ -11,6 +11,7 @@ out vec3 fragColor;
 void main() {
     //mat4 MVP = ubo.model * ubo.view * ubo.proj;
     gl_Position = proj * view * model * vec4(inPosition, 1.0);
-    vec4 tcolor = vec4(0.6, 0.3, 0.7, 0.0);
+    vec3 tcolor = normalize(inPosition);
+    
     fragColor = tcolor.xyz;
 }

@@ -64,6 +64,7 @@ SVao::SVao(QOpenGLShaderProgram *program, QObject *parent) : QObject(parent), mV
     mVbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
     mVbo.bind();
     mVbo.allocate(rawVertexBuffer, rawVertexbufferSize);
+    mVbo.release();
 }
 
 SVao::~SVao(){
@@ -80,11 +81,13 @@ void SVao::updateUniformBuffer(){
     view.setToIdentity();
     proj.setToIdentity();
 
+    //float ratio = mViewportSize ? mViewportSize->width() / mViewportSize->height() : 4.0f/3.0f;
+    float ratio = 4.0f/3.0f;
     model.scale(QVector3D(0.2,0.2,0.2));
     view.lookAt(eye, direction, up);
     proj.perspective(
                 M_PI/4.0f,
-                4.0f/3.0f,
+                ratio,
                 0.1f,
                 100.0f
     );
@@ -93,6 +96,11 @@ void SVao::updateUniformBuffer(){
     //proj.setToIdentity();
 
     //dumpMat4((proj * view * model).data() , "MVP");
+}
+
+void SVao::setViewportSize(QSize *size){
+    if(size)
+    mViewportSize = size;
 }
 
 void SVao::draw(){

@@ -52,10 +52,10 @@ void SGlArea::cleanup()
 class CleanupJob : public QRunnable
 {
 public:
-    CleanupJob(SquircleRenderer *renderer) : mRenderer(renderer) { }
+    CleanupJob(SRenderToolbox *renderer) : mRenderer(renderer) { }
     void run() override { delete mRenderer; }
 private:
-    SquircleRenderer *mRenderer;
+    SRenderToolbox *mRenderer;
 };
 
 void SGlArea::releaseResources()
@@ -69,9 +69,9 @@ void SGlArea::releaseResources()
 void SGlArea::sync()
 {
     if (!mRenderer) {
-        mRenderer = new SquircleRenderer();
-        connect(window(), &QQuickWindow::beforeRendering, mRenderer, &SquircleRenderer::init, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRenderPassRecording, mRenderer, &SquircleRenderer::paint, Qt::DirectConnection);
+        mRenderer = new SRenderToolbox();
+        connect(window(), &QQuickWindow::beforeRendering, mRenderer, &SRenderToolbox::init, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRenderPassRecording, mRenderer, &SRenderToolbox::paint, Qt::DirectConnection);
     }
     mRenderer->setViewportSize(window()->size() * window()->devicePixelRatio());
     mRenderer->setT(mT);

@@ -4,7 +4,7 @@
 #include <QQuickItem>
 #include <QRunnable>
 #include <QQuickWindow>
-#include <squirclerenderer.hpp>
+#include <srendertoolbox.hpp>
 
 class SGlArea : public QQuickItem
 {
@@ -31,7 +31,7 @@ private:
     void releaseResources() override;
 
     qreal mT = 0;
-    SquircleRenderer *mRenderer = nullptr;
+    SRenderToolbox *mRenderer = nullptr;
 };
 
 #endif // SGLAREA_HPP

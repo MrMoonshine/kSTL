@@ -10,8 +10,10 @@
 #include <KLocalizedString>
 #include <KAboutData>
 
+#include <KirigamiPluginFactory>
+#include <PlatformTheme>
+
 #include <controller.hpp>
-#include <vulkanrenderarea.hpp>
 #include <sglarea.hpp>
 
 using namespace std;
