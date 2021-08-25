@@ -92,6 +92,7 @@ void SRenderToolbox::init()
         mVaoShdr->link();
         mVao = new SVao(mVaoShdr);
         mVao->setViewportSize(&mViewportSize);
+        mVao->setColor(&mFilamentColor);
 
         mBgShdr = new QOpenGLShaderProgram();
         mBgShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/background.vert");
@@ -119,6 +120,9 @@ void SRenderToolbox::setViewportSize(const QSize &size){
     mViewportSize = size;
 }
 
+void SRenderToolbox::setFilamentColor(const QColor &color){
+    mFilamentColor = color;
+}
 //! [4] //! [5]
 void SRenderToolbox::paint()
 {

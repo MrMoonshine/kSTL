@@ -26,6 +26,12 @@ void SGlArea::setT(qreal t)
     if (window())
         window()->update();
 }
+
+void SGlArea::setFilament(QColor color){
+    //qDebug() << "Color is now: " << color.name();
+    if(mRenderer)
+        mRenderer->setFilamentColor(color);
+}
 //! [8]
 
 //! [1]

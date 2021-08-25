@@ -55,7 +55,6 @@ static void dumpMat4(float *m4, const char* title){
 SVao::SVao(QOpenGLShaderProgram *program, QObject *parent) : QObject(parent), mVbo(QOpenGLBuffer::VertexBuffer)
 {
     mProgram = program;
-    filamentColor = QColor("#888888");
 
     initializeOpenGLFunctions();
     mVao.create();
@@ -70,6 +69,10 @@ SVao::SVao(QOpenGLShaderProgram *program, QObject *parent) : QObject(parent), mV
 SVao::~SVao(){
     mVbo.destroy();
     mVao.destroy();
+}
+
+void SVao::setColor(QColor *color){
+    mFilamentColor = color;
 }
 
 void SVao::updateUniformBuffer(){
@@ -115,6 +118,11 @@ void SVao::draw(){
     mProgram->setUniformValue("model", model);
     mProgram->setUniformValue("view", view);
     mProgram->setUniformValue("proj", proj);
+
+    if(mFilamentColor)
+        mProgram->setUniformValue("filament", QVector3D(mFilamentColor->redF(), mFilamentColor->greenF(), mFilamentColor->blueF()));
+    else
+        mProgram->setUniformValue("filament", QVector3D(0,0,0));
 
     mProgram->enableAttributeArray(0);
     mVbo.bind();

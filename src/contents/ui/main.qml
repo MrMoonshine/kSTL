@@ -50,6 +50,7 @@ Kirigami.ApplicationWindow {
         color: Kirigami.Theme.highlightColor
         onAccepted: {
             console.log("Material Color is: " + colorDialog.color)
+            renderarea.filament = colorDialog.color;
         }
         onRejected: {
             console.log("No color selected")
@@ -177,6 +178,8 @@ Kirigami.ApplicationWindow {
                     height: 480;
 
                     GlRenderArea {
+                        id: renderarea;
+                        filament: Kirigami.Theme.highlightColor;
                         SequentialAnimation on t {
                             NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
                             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }

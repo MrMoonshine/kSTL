@@ -20,6 +20,7 @@ public:
     void setViewportSize(const QSize &size);
     void setWindow(QQuickWindow *window) { m_window = window; }
 
+    void setFilamentColor(const QColor &color);
 public slots:
     void init();
     void paint();
@@ -28,6 +29,7 @@ private:
     bool validViewport = false;
     QSize mViewportSize;
     qreal m_t;
+    QColor mFilamentColor = Qt::black;
 
     QOpenGLShaderProgram *m_program;
     QOpenGLShaderProgram *mBgShdr;
