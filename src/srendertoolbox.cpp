@@ -62,8 +62,8 @@ void SRenderToolbox::init()
     if (!mBgShdr || !mMeshShdr) {
         initializeOpenGLFunctions();
         mMeshShdr = new QOpenGLShaderProgram();
-        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.vert");
-        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.frag");
+        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/model.vert");
+        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/model.frag");
         mMeshShdr->link();
         mMesh = new SMeshSTL(mMeshShdr);
         mMesh->setViewportSize(&mViewportSize);

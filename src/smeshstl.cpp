@@ -45,20 +45,17 @@ SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
     mVertexBO(QOpenGLBuffer::VertexBuffer),
     mNormalsBO()
 {
-    loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
+    mVertexBO.create();
+    mNormalsBO.create();
+    //loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
+    loadModel(QUrl("file:///home/david/3D-Druck/Comissions/Martin/Schnalle/SchnalleWeiblichV2_Base.stl"));
     //loadModel(QUrl("file:///home/david/3D-Druck/Coding-Test/oida-Würfel.stl"));
-    /*QVector3D eye;
-    float theta = M_PI_4;
-    float phi = M_PI_4;
-    eye.setX(mRadius * sin(phi) * cos(theta));
-    eye.setY(mRadius * sin(phi) * sin(theta));
-    eye.setZ(mRadius * cos(phi));
-    qDebug() << "My Eye Position is: (" << eye.x() << "|"<< eye.y() << "|"<< eye.z() << ")";*/
     mModelUp = QVector3D(0, 1, 0);
 }
 
 SMeshSTL::~SMeshSTL(){
     mVertexBO.destroy();
+    mNormalsBO.destroy();
 }
 
 void SMeshSTL::setColor(QColor *color){
@@ -90,11 +87,21 @@ int SMeshSTL::loadModel(const QUrl &model){
 
     mVertexCount = verticesSize / (STL_VERTEX_FLOAT_COUNT * sizeof(float));
 
-    mVertexBO.create();
     mVertexBO.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     mVertexBO.bind();
     mVertexBO.allocate(vertices, verticesSize);
     mVertexBO.release();
+
+    mNormalsBO.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    mNormalsBO.bind();
+    mNormalsBO.allocate(normals, normalsSize);
+    mNormalsBO.release();
+
+    /*for(int a = 0; a < normalsSize/sizeof(u_int32_t); a++){
+        printf("%d\t", normals[a]);
+        if(a % 3 == 2)
+            printf("\n");
+    }*/
 
     free(normals);
     free(vertices);
@@ -153,10 +160,20 @@ void SMeshSTL::draw(){
                 3,
                 0
     );
+    mProgram->enableAttributeArray(1);
+    mVertexBO.bind();
+    mProgram->setAttributeBuffer(
+                1,
+                GL_INT_2_10_10_10_REV,
+                0,
+                4,
+                0
+    );
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDrawArrays(GL_TRIANGLES, 0, mVertexCount * 3);
 
     mProgram->disableAttributeArray(0);
+    mProgram->disableAttributeArray(1);
     mVertexBO.release();
     mProgram->release();
     mVao.release();
