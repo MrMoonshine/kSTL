@@ -47,8 +47,8 @@ SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
 {
     mVertexBO.create();
     mNormalsBO.create();
-    //loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
-    loadModel(QUrl("file:///home/david/3D-Druck/Comissions/Martin/Schnalle/SchnalleWeiblichV2_Base.stl"));
+    loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
+    //loadModel(QUrl("file:///home/david/3D-Druck/schwein.stl"));
     //loadModel(QUrl("file:///home/david/3D-Druck/Coding-Test/oida-Würfel.stl"));
     mModelUp = QVector3D(0, 1, 0);
 }
@@ -79,10 +79,10 @@ int SMeshSTL::loadModel(const QUrl &model){
 
     size_t verticesSize, normalsSize;
     float *vertices;
-    int32_t *normals;
+    float *normals;
     stl_model_init(model.toLocalFile().toStdString().c_str(), NULL, &verticesSize, NULL, &normalsSize);
     vertices = (float*)malloc(verticesSize);
-    normals = (int32_t*)malloc(normalsSize);
+    normals = (float*)malloc(normalsSize);
     stl_model_init(model.toLocalFile().toStdString().c_str(), vertices, &verticesSize, normals, &normalsSize);
 
     mVertexCount = verticesSize / (STL_VERTEX_FLOAT_COUNT * sizeof(float));
@@ -97,8 +97,8 @@ int SMeshSTL::loadModel(const QUrl &model){
     mNormalsBO.allocate(normals, normalsSize);
     mNormalsBO.release();
 
-    /*for(int a = 0; a < normalsSize/sizeof(u_int32_t); a++){
-        printf("%d\t", normals[a]);
+    /*for(unsigned int a = 0; a < normalsSize/sizeof(float); a++){
+        printf("%.2f\t", normals[a]);
         if(a % 3 == 2)
             printf("\n");
     }*/
@@ -109,28 +109,32 @@ int SMeshSTL::loadModel(const QUrl &model){
 }
 
 void SMeshSTL::updateUniformBuffer(){
-    QVector3D eye(1200,800,800);
+    QVector3D eye(120,80,80);
     QVector3D direction(0, 0, 0);
     QVector3D up(0, 1, 0);
+
+    eye.setX(mRadius * sin(qDegreesToRadians(mPhi)) * cos(qDegreesToRadians(mTheta)));
+    eye.setY(mRadius * sin(qDegreesToRadians(mPhi)) * sin(qDegreesToRadians(mTheta)));
+    eye.setZ(mRadius * cos(qDegreesToRadians(mPhi)));
 
     model.setToIdentity();
     view.setToIdentity();
     proj.setToIdentity();
-
     //float ratio = mViewportSize ? mViewportSize->width() / mViewportSize->height() : 4.0f/3.0f;
     float ratio = 4.0f/3.0f;
-    model.scale(QVector3D(0.2,0.2,0.2));
+    model.scale(QVector3D(0.02,0.02,0.02));
 
-    model.rotate(mPhi, QVector3D(0,1,0));
-    model.rotate(mTheta, QVector3D(1,0,0));
-
+    //model.rotate(mPhi, QVector3D(0,1,0));
+    //model.rotate(mTheta, QVector3D(1,0,0));
+    model.rotate(-90, QVector3D(1,0,0));
     view.lookAt(eye, direction, up);
     proj.perspective(
                 M_PI/4.0f,
                 ratio,
                 0.1f,
-                10000.0f
+                300.0f
     );
+    mProgram->setUniformValue("eye", eye);
 }
 
 void SMeshSTL::draw(){
@@ -138,6 +142,7 @@ void SMeshSTL::draw(){
     mProgram->bind();
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
 
@@ -164,9 +169,9 @@ void SMeshSTL::draw(){
     mVertexBO.bind();
     mProgram->setAttributeBuffer(
                 1,
-                GL_INT_2_10_10_10_REV,
+                GL_FLOAT,
                 0,
-                4,
+                3,
                 0
     );
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);

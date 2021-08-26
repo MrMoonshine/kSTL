@@ -183,7 +183,7 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
                     text: "A Pink Cube, Rendered with OpenGL"
                     type: Kirigami.MessageType.Information
-                    visible: true
+                    visible: false
                 }
 
                 MouseArea {

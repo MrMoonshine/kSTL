@@ -14,7 +14,7 @@ static int vec3_to_int_2_10_10_10_rev(float *vector){
 }
 
 static const char* TAG = "STL";
-int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, int32_t* normals, size_t *normalSize){
+int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, float* normals, size_t *normalSize){
     char header[STL_HEADER_SIZE] = "";
     unsigned int number_of_vertices;
 
@@ -32,16 +32,19 @@ int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, in
         //If the pointers are NULL then return size
         if(vertices == NULL || normals == NULL){
             *vertexSize = number_of_vertices * STL_VERTEX_FLOAT_COUNT * sizeof(float);
-            *normalSize = number_of_vertices * 3 * sizeof(unsigned int);
+            *normalSize = number_of_vertices * 3 * 3 * sizeof(unsigned int);
             return EXIT_SUCCESS;
         }
 
+        //memset(normals, 0, *normalSize);
+        //memset(vertices, 0, *vertexSize);
         for(unsigned int v = 0; v < number_of_vertices; v++){
             float normal[3];
             fread(normal, sizeof(float) * 3, 1, stlfp);
-            int valuebuffer = vec3_to_int_2_10_10_10_rev(normal);
-            for(int a = 0; a < 3; a++)
-            normals[v*3 + a] = valuebuffer;
+            //int valuebuffer = vec3_to_int_2_10_10_10_rev(normal);
+            for(int a = 0; a < 3; a++){
+                memcpy((normals + v * 9 + a*3), normal, 3);
+            }
 
             for(int b = 0; b < STL_VERTEX_FLOAT_COUNT; b++){
                 unsigned int tentative_index = v * STL_VERTEX_FLOAT_COUNT + b;

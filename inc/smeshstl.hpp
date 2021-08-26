@@ -39,7 +39,7 @@ public:
 private:
     void updateUniformBuffer();
     //Spherical Camera Radius
-    float mRadius = 1000.0f;
+    float mRadius = 100.0f;
     float mPhi = 0.0f;
     float mTheta = 0.0f;
 

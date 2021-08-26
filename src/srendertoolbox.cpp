@@ -76,6 +76,7 @@ void SRenderToolbox::init()
         mBgShdr->link();
         mBackground = new SBackground(mBgShdr);
         mBackground->setViewportSize(&mViewportSize);
+
     }
 }
 
@@ -108,7 +109,7 @@ void SRenderToolbox::paint()
     // OpenGL directly.
     m_window->beginExternalCommands();
     glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     /*m_program->bind();
 
     m_program->enableAttributeArray(0);
