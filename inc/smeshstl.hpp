@@ -14,8 +14,9 @@
 #include <QVector2D>
 #include <QtMath>
 #include <QUrl>
-#include <QFile>
 #include <errorhandler.hpp>
+
+#include <stl.h>
 
 #define STL_HEADER_SIZE 80
 #define STL_VERTEX_SIZE 50
@@ -38,9 +39,11 @@ public:
 private:
     void updateUniformBuffer();
     //Spherical Camera Radius
-    float mRadius = 60.0f;
+    float mRadius = 1000.0f;
     float mPhi = 0.0f;
     float mTheta = 0.0f;
+
+    uint32_t mVertexCount = 0;
     QColor *mFilamentColor = nullptr;
     QOpenGLBuffer mVertexBO, mNormalsBO;
     QMatrix4x4 model, view, proj;
