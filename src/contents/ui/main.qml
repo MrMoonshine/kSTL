@@ -1,8 +1,6 @@
 // Includes relevant modules used by the QML
-import QtQml 2.15
 import QtQuick 2.14
 import QtQuick.Dialogs 1.0
-import QtQuick.Controls 2.15
 import QtQuick.Controls 2.15 as Controls
 import QtQuick.Layouts 1.14
 //KDE
@@ -57,6 +55,20 @@ Kirigami.ApplicationWindow {
         }
     }
 
+    //File Selector
+    FileDialog{
+        id: fileSelector
+        title: "Select a STL Mesh"
+        nameFilters: [ "Stereolitography Meshes (*.stl *.ast)", "All files (*)" ]
+        folder: shortcuts.home
+        onAccepted:{
+            console.log(fileSelector.fileUrls);
+        }
+
+        onRejected: {
+            console.log("Rejected");
+        }
+    }
 
     Kirigami.OverlaySheet {
             id: metaSheet
@@ -116,7 +128,7 @@ Kirigami.ApplicationWindow {
                     text: i18n("Open")
                     iconName: "folder-open"
                     shortcut: StandardKey.Open
-                    onTriggered: showPassiveNotification(i18n("Open File Action"))
+                    onTriggered: fileSelector.open()
                 }
                 left: Kirigami.Action {
                     text: i18n("Material color")
@@ -124,6 +136,7 @@ Kirigami.ApplicationWindow {
                     onTriggered: colorDialog.open()
                 }
                 right: Kirigami.Action {
+                    text: i18n("Statistics")
                     icon.name: "dialog-information"
                     onTriggered: metaSheet.open()
                 }
@@ -174,8 +187,29 @@ Kirigami.ApplicationWindow {
                 }
 
                 MouseArea {
-                    Layout.fillWidth: true;
-                    height: 480;
+                    id: mousearea
+                    Layout.fillWidth: true
+                    height: 480
+
+                    property var chacheX: 0
+                    property var chacheY: 0
+                    onPressed: {
+                        //console.log("Pressed!")
+                        hoverEnabled: true
+                        chacheX = mouseX
+                        chacheY = mouseY
+                    }
+
+                    onReleased: {
+                        hoverEnabled: false
+                        //console.log("Released")
+                    }
+                    onPositionChanged: {
+                        //console.log("(" + (mouseX - chacheX) + "|" + (mouseY - chacheY) + ")")
+                        renderarea.deltaMouse = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
+                        chacheX = mouseX
+                        chacheY = mouseY
+                    }
 
                     GlRenderArea {
                         id: renderarea;

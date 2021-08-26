@@ -21,16 +21,11 @@ public:
     ~SVao();
     virtual void draw();
     void setViewportSize(QSize *size);
-    void setColor(QColor *color);
 protected:
     QOpenGLVertexArrayObject mVao;
-    QOpenGLBuffer mVbo;
     QOpenGLShaderProgram *mProgram;
-    void updateUniformBuffer();
-    QMatrix4x4 model, view, proj;
     QSize *mViewportSize = nullptr;
 private:
-    QColor *mFilamentColor = nullptr;
 
 signals:
 

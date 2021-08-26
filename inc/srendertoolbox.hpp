@@ -6,6 +6,7 @@
 #include <QtGui/QOpenGLFunctions>
 
 #include <svao.hpp>
+#include <smeshstl.hpp>
 #include <sbackground.hpp>
 
 //! [1]
@@ -13,7 +14,7 @@ class SRenderToolbox : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    SRenderToolbox() : m_t(0), m_program(0), mViewportSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT) { }
+    SRenderToolbox() : m_t(0), mBgShdr(0), mMeshShdr(0), mViewportSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT) { }
     ~SRenderToolbox();
 
     void setT(qreal t) { m_t = t; }
@@ -21,6 +22,7 @@ public:
     void setWindow(QQuickWindow *window) { m_window = window; }
 
     void setFilamentColor(const QColor &color);
+    SMeshSTL* model();
 public slots:
     void init();
     void paint();
@@ -31,12 +33,11 @@ private:
     qreal m_t;
     QColor mFilamentColor = Qt::black;
 
-    QOpenGLShaderProgram *m_program;
     QOpenGLShaderProgram *mBgShdr;
-    QOpenGLShaderProgram *mVaoShdr;
+    QOpenGLShaderProgram *mMeshShdr;
 
-    SBackground *mBackground;
-    SVao *mVao;
+    SBackground *mBackground = nullptr;
+    SMeshSTL *mMesh = nullptr;
     QQuickWindow *m_window;
 };
 

@@ -5,6 +5,7 @@
 #include <QRunnable>
 #include <QQuickWindow>
 #include <QColor>
+#include <QVector2D>
 #include <srendertoolbox.hpp>
 
 class SGlArea : public QQuickItem
@@ -12,6 +13,7 @@ class SGlArea : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
     Q_PROPERTY(QColor filament WRITE setFilament)
+    Q_PROPERTY(QVector2D deltaMouse WRITE setDeltaMouse)
     QML_ELEMENT
 public:
     SGlArea();
@@ -21,6 +23,7 @@ public:
     void setT(qreal t);
 
     void setFilament(QColor color);
+    void setDeltaMouse(QVector2D deltaMouse);
 signals:
     void tChanged();
 

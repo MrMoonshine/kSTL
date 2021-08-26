@@ -59,40 +59,15 @@
 //! [4]
 void SRenderToolbox::init()
 {
-    if (!m_program) {
-        QSGRendererInterface *rif = m_window->rendererInterface();
-        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
-
+    if (!mBgShdr || !mMeshShdr) {
         initializeOpenGLFunctions();
-
-        m_program = new QOpenGLShaderProgram();
-        m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                    "attribute highp vec4 vertices;"
-                                                    "varying highp vec2 coords;"
-                                                    "void main() {"
-                                                    "    gl_Position = vertices;"
-                                                    "    coords = vertices.xy;"
-                                                    "}");
-        m_program->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                    "uniform lowp float t;"
-                                                    "varying highp vec2 coords;"
-                                                    "void main() {"
-                                                    "    lowp float i = 1. - (pow(abs(coords.x), 4.) + pow(abs(coords.y), 4.));"
-                                                    "    i = smoothstep(t - 0.8, t + 0.8, i);"
-                                                    "    i = floor(i * 20.) / 20.;"
-                                                    "    gl_FragColor = vec4(coords * .5 + .5, i, i);"
-                                                    "}");
-
-        m_program->bindAttributeLocation("vertices", 0);
-        m_program->link();
-
-        mVaoShdr = new QOpenGLShaderProgram();
-        mVaoShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.vert");
-        mVaoShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.frag");
-        mVaoShdr->link();
-        mVao = new SVao(mVaoShdr);
-        mVao->setViewportSize(&mViewportSize);
-        mVao->setColor(&mFilamentColor);
+        mMeshShdr = new QOpenGLShaderProgram();
+        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.vert");
+        mMeshShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/test.frag");
+        mMeshShdr->link();
+        mMesh = new SMeshSTL(mMeshShdr);
+        mMesh->setViewportSize(&mViewportSize);
+        mMesh->setColor(&mFilamentColor);
 
         mBgShdr = new QOpenGLShaderProgram();
         mBgShdr->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, "/home/david/Programmieren/C++/QT/kSTL/src/shaders/background.vert");
@@ -106,10 +81,9 @@ void SRenderToolbox::init()
 
 SRenderToolbox::~SRenderToolbox()
 {
-    delete mVao;
+    delete mMesh;
     delete mBackground;
-    delete m_program;
-    delete mVaoShdr;
+    delete mMeshShdr;
     delete mBgShdr;
 }
 
@@ -122,6 +96,10 @@ void SRenderToolbox::setViewportSize(const QSize &size){
 
 void SRenderToolbox::setFilamentColor(const QColor &color){
     mFilamentColor = color;
+}
+
+SMeshSTL* SRenderToolbox::model(){
+    return mMesh;
 }
 //! [4] //! [5]
 void SRenderToolbox::paint()
@@ -162,7 +140,7 @@ void SRenderToolbox::paint()
     m_program->release();*/
 
     mBackground->draw();
-    mVao->draw();
+    mMesh->draw();
 
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.

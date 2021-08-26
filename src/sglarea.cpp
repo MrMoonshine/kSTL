@@ -32,6 +32,11 @@ void SGlArea::setFilament(QColor color){
     if(mRenderer)
         mRenderer->setFilamentColor(color);
 }
+
+void SGlArea::setDeltaMouse(QVector2D deltaMouse){
+    if(mRenderer)
+        mRenderer->model()->setDeltaMouse(deltaMouse);
+}
 //! [8]
 
 //! [1]
