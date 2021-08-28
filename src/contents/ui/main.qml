@@ -191,6 +191,8 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
                     height: 480
 
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
                     property var chacheX: 0
                     property var chacheY: 0
                     onPressed: {
@@ -204,11 +206,26 @@ Kirigami.ApplicationWindow {
                         hoverEnabled: false
                         //console.log("Released")
                     }
+
                     onPositionChanged: {
-                        //console.log("(" + (mouseX - chacheX) + "|" + (mouseY - chacheY) + ")")
-                        renderarea.deltaMouse = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
-                        chacheX = mouseX
-                        chacheY = mouseY
+                        if(mousearea.pressedButtons & Qt.LeftButton && mousearea.pressedButtons & Qt.MiddleButton){
+                            chacheX = mouseX
+                            chacheY = mouseY
+                            return;
+                        }else if(mousearea.pressedButtons & Qt.LeftButton){
+                            renderarea.deltaRotation = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
+                            chacheX = mouseX
+                            chacheY = mouseY
+                        }else{
+                            renderarea.deltaTransform = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
+                            chacheX = mouseX
+                            chacheY = mouseY
+                        }
+                    }
+
+                    onWheel: {
+                        //console.log("Wheel: " + wheel.angleDelta.y)
+                        renderarea.deltaZoom = wheel.angleDelta.y
                     }
 
                     GlRenderArea {

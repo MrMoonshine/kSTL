@@ -13,7 +13,9 @@ class SGlArea : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(qreal t READ t WRITE setT NOTIFY tChanged)
     Q_PROPERTY(QColor filament WRITE setFilament)
-    Q_PROPERTY(QVector2D deltaMouse WRITE setDeltaMouse)
+    Q_PROPERTY(QVector2D deltaRotation WRITE setDeltaRotation)
+    Q_PROPERTY(QVector2D deltaTransform WRITE setDeltaTransform)
+    Q_PROPERTY(int deltaZoom WRITE setDeltaZoom)
     QML_ELEMENT
 public:
     SGlArea();
@@ -23,7 +25,9 @@ public:
     void setT(qreal t);
 
     void setFilament(QColor color);
-    void setDeltaMouse(QVector2D deltaMouse);
+    void setDeltaRotation(QVector2D deltaMouse);
+    void setDeltaTransform(QVector2D deltaMouse);
+    void setDeltaZoom(int deltaWheel);
 signals:
     void tChanged();
 

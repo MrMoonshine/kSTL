@@ -33,9 +33,19 @@ void SGlArea::setFilament(QColor color){
         mRenderer->setFilamentColor(color);
 }
 
-void SGlArea::setDeltaMouse(QVector2D deltaMouse){
+void SGlArea::setDeltaRotation(QVector2D deltaMouse){
     if(mRenderer)
-        mRenderer->model()->setDeltaMouse(deltaMouse);
+        mRenderer->model()->setDeltaRotation(deltaMouse);
+}
+
+void SGlArea::setDeltaTransform(QVector2D deltaMouse){
+    if(mRenderer)
+        mRenderer->model()->setDeltaTransform(deltaMouse);
+}
+
+void SGlArea::setDeltaZoom(int deltaWheel){
+    if(mRenderer)
+        mRenderer->model()->setDeltaZoom(deltaWheel);
 }
 //! [8]
 

@@ -1,45 +1,5 @@
 #include <smeshstl.hpp>
 static const char* TAG = "STL";
-/*static const size_t rawVertexbufferSize = 12 * 3 * 3 * sizeof(float);
-static const float rawVertexBuffer[] = {
-    -1.0f,-1.0f,-1.0f,
-    -1.0f,-1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-     1.0f, 1.0f,-1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f,
-     1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f,-1.0f,
-     1.0f,-1.0f,-1.0f,
-     1.0f, 1.0f,-1.0f,
-     1.0f,-1.0f,-1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f,-1.0f,
-     1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f, 1.0f,
-    -1.0f,-1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-    -1.0f,-1.0f, 1.0f,
-     1.0f,-1.0f, 1.0f,
-     1.0f, 1.0f, 1.0f,
-     1.0f,-1.0f,-1.0f,
-     1.0f, 1.0f,-1.0f,
-     1.0f,-1.0f,-1.0f,
-     1.0f, 1.0f, 1.0f,
-     1.0f,-1.0f, 1.0f,
-     1.0f, 1.0f, 1.0f,
-     1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f,
-     1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f, 1.0f,
-     1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-     1.0f,-1.0f, 1.0f
-};
-*/
 SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
     SVao(program, parent),
     mVertexBO(QOpenGLBuffer::VertexBuffer),
@@ -51,6 +11,8 @@ SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
     //loadModel(QUrl("file:///home/david/3D-Druck/schwein.stl"));
     //loadModel(QUrl("file:///home/david/3D-Druck/Coding-Test/oida-Würfel.stl"));
     mModelUp = QVector3D(0, 1, 0);
+    mDeltaMove = QVector2D(0,0);
+    mTransform = QVector3D(0,0,0);
 }
 
 SMeshSTL::~SMeshSTL(){
@@ -62,10 +24,20 @@ void SMeshSTL::setColor(QColor *color){
     mFilamentColor = color;
 }
 
-void SMeshSTL::setDeltaMouse(QVector2D deltaMouse){
+void SMeshSTL::setDeltaRotation(QVector2D deltaMouse){
     //qDebug() << deltaMouse.x();
     mPhi += deltaMouse.x() / 4.0f;
     mTheta += deltaMouse.y() / 4.0f;
+}
+
+void SMeshSTL::setDeltaTransform(QVector2D deltaMouse){
+    //qDebug() << "Delta Transform: (" << deltaMouse.x() << "|" << deltaMouse.y() << ")";
+    mDeltaMove = deltaMouse;
+}
+
+void SMeshSTL::setDeltaZoom(int deltaWheel){
+    //qDebug() << "Zoom delta: " << deltaWheel/MOUSE_WHEEL_ROTATION_STEP_SIZE;
+    mZoom *= (50.0f - deltaWheel/MOUSE_WHEEL_ROTATION_STEP_SIZE)/50.0f;
 }
 
 int SMeshSTL::loadModel(const QUrl &model){
@@ -108,8 +80,30 @@ int SMeshSTL::loadModel(const QUrl &model){
     return EXIT_SUCCESS;
 }
 
+void SMeshSTL::handleTransformation(const QVector3D &eye){
+    if(mDeltaMove.x() == 0 && mDeltaMove.y() == 0)
+        return;
+
+    //qDebug() << "Moving..." << mDeltaMove.x();
+    QVector3D px(
+                eye.y(),
+                0,
+                -eye.x()
+    );
+    px.normalize();
+
+    QVector3D py = QVector3D::crossProduct(px, eye);
+    py.normalize();
+
+    //qDebug() << "X vector: (" << px.x() << "|" << px.y() << "|" << px.z() << ")";
+    mTransform += 0.1 * (px * mDeltaMove.x() + py * mDeltaMove.y());
+
+    mDeltaMove.setX(0);
+    mDeltaMove.setY(0);
+}
+
 void SMeshSTL::updateUniformBuffer(){
-    QVector3D eye(120,80,80);
+    QVector3D eye(0,0,0);
     QVector3D direction(0, 0, 0);
     QVector3D up(0, 1, 0);
 
@@ -123,13 +117,17 @@ void SMeshSTL::updateUniformBuffer(){
     //float ratio = mViewportSize ? mViewportSize->width() / mViewportSize->height() : 4.0f/3.0f;
     float ratio = 4.0f/3.0f;
     model.scale(QVector3D(0.02,0.02,0.02));
-
+    //Handle the transformation from the mouse input
+    handleTransformation(eye);
+    model.translate(mTransform);
     //model.rotate(mPhi, QVector3D(0,1,0));
     //model.rotate(mTheta, QVector3D(1,0,0));
     model.rotate(-90, QVector3D(1,0,0));
     view.lookAt(eye, direction, up);
+
+    float FOV = (M_PI/4.0f) * mZoom;
     proj.perspective(
-                M_PI/4.0f,
+                FOV,
                 ratio,
                 0.1f,
                 300.0f

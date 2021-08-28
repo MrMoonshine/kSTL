@@ -17,13 +17,7 @@
 #include <errorhandler.hpp>
 
 #include <stl.h>
-
-#define STL_HEADER_SIZE 80
-#define STL_VERTEX_SIZE 50
-#define STL_VERTEX_FLOAT_COUNT 9
-
-#define STL_GL_10_BITS 10
-#define STL_GL_10_MAX ((2 << (STL_GL_10_BITS - 1))-1)
+#define MOUSE_WHEEL_ROTATION_STEP_SIZE 120
 
 class SMeshSTL : public SVao
 {
@@ -35,13 +29,20 @@ public:
     //test:
     int loadModel(const QUrl &model);
     void setColor(QColor *color);
-    void setDeltaMouse(QVector2D deltaMouse);
+    void setDeltaRotation(QVector2D deltaMouse);
+    void setDeltaTransform(QVector2D deltaMouse);
+    void setDeltaZoom(int deltaWheel);
 private:
+    void handleTransformation(const QVector3D &eye);
     void updateUniformBuffer();
     //Spherical Camera Radius
     float mRadius = 100.0f;
     float mPhi = 0.0f;
     float mTheta = 0.0f;
+    float mZoom = 1.0f;
+    //Transformation Vector for moving the model around
+    QVector3D mTransform;
+    QVector2D mDeltaMove;
 
     uint32_t mVertexCount = 0;
     QColor *mFilamentColor = nullptr;
