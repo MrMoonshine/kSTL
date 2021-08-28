@@ -131,7 +131,7 @@ Kirigami.ApplicationWindow {
                     onTriggered: fileSelector.open()
                 }
                 left: Kirigami.Action {
-                    text: i18n("Material color")
+                    text: i18n("Material Color")
                     iconName: "preferences-desktop-theme"
                     onTriggered: colorDialog.open()
                 }
@@ -142,14 +142,9 @@ Kirigami.ApplicationWindow {
                 }
                 contextualActions: [
                     Kirigami.Action {
-                        text: i18n("W.I.P Action 1")
-                        icon.name: "network-offline"
+                        text: i18n("Restore View")
+                        icon.name: "view-refresh"
                         onTriggered: showPassiveNotification(i18n("Contextual action 1 clicked"))
-                    },
-                    Kirigami.Action {
-                        text: i18n("W.I.P Action 2")
-                        icon.name: "network-offline"
-                        enabled: false
                     }
                 ]
             }
@@ -230,7 +225,7 @@ Kirigami.ApplicationWindow {
 
                     GlRenderArea {
                         id: renderarea;
-                        filament: Kirigami.Theme.highlightColor;
+                        filament: Kirigami.Theme.focusColor;
                         SequentialAnimation on t {
                             NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
                             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }

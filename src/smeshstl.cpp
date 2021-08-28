@@ -14,9 +14,7 @@ SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
     mDeltaMove = QVector2D(0,0);
     mTransform = QVector3D(0,0,0);
 
-    //Initial 45°
-    mPhi = 45;
-    mTheta = 45;
+    resetView();
 }
 
 SMeshSTL::~SMeshSTL(){
@@ -32,20 +30,26 @@ void SMeshSTL::setDeltaRotation(QVector2D deltaMouse){
     //qDebug() << deltaMouse.x();
     if(mPhi + deltaMouse.y()/4.0f > 360){
         mPhi = mPhi + deltaMouse.y()/4.0f - 360;
-        qDebug() << "Here 1";
+        qDebug() << "------------------------Here 1------------------------";
     }else if(mPhi + deltaMouse.y()/4.0f < 0){
         mPhi = 360 + (mPhi + deltaMouse.y()/4.0f);
-        qDebug() << "Here 2";
+        qDebug() << "------------------------Here 2------------------------";
     }else{
         mPhi += deltaMouse.y() / 4.0f;
     }
 
+    if(mPhi < 180){
+        mHemisphere = UPPER;
+    }else{
+        mHemisphere = LOWER;
+    }
+
     if(mTheta + deltaMouse.x()/4.0f > 360){
         mTheta = mTheta + deltaMouse.x()/4.0f - 360;
-        qDebug() << "Here 3";
+        qDebug() << "------------------------Here 3------------------------";
     }else if(mTheta + deltaMouse.x()/4.0f < 0){
         mTheta = 360 + (mTheta + deltaMouse.x()/4.0f);
-        qDebug() << "Here 4";
+        qDebug() << "------------------------Here 4------------------------";
     }else{
         mTheta += deltaMouse.x() / 4.0f;
     }
@@ -101,13 +105,21 @@ int SMeshSTL::loadModel(const QUrl &model){
     return EXIT_SUCCESS;
 }
 
+void SMeshSTL::resetView(){
+    //Initial 45°
+    mPhi = 45;
+    mTheta = 45;
+    mHemisphere = UPPER;
+}
+
 void SMeshSTL::handleTransformation(const QVector3D &eye){
     if(mDeltaMove.x() == 0 && mDeltaMove.y() == 0)
         return;
 
-    //qDebug() << "Moving..." << mDeltaMove.x();
+    qDebug() << "Moving..." << mDeltaMove.x();
     qDebug() << "Phi:\t" << mPhi << "\nTheta:\t" << mTheta;
-    //qDebug() << "eye vector: (" << eye.x() << "|" << eye.y() << "|" << eye.z() << ")";
+    qDebug() << "Sin Phi:\t" << sin(qDegreesToRadians(mPhi)) << "\nSin Theta:\t" << sin(qDegreesToRadians(mTheta));
+    qDebug() << "eye vector: (" << eye.x() << "|" << eye.y() << "|" << eye.z() << ")";
     QVector3D px(
                 eye.z(),
                 0,
@@ -130,17 +142,15 @@ void SMeshSTL::updateUniformBuffer(){
     QVector3D direction(0, 0, 0);
     QVector3D up(0, 1, 0);
 
-    /*if(mTheta == 360){
-        mPhi++;
-        mTheta = mPhi == 360 ? 0 : mTheta;
-    }else if(mPhi == 360){
-        mTheta++;
-        mPhi = mTheta == 360 ? 0 : mPhi;
-    }*/
-
     eye.setX(mRadius * sin(qDegreesToRadians(mPhi)) * cos(qDegreesToRadians(mTheta)));
-    eye.setZ(mRadius * sin(qDegreesToRadians(mPhi)) * sin(qDegreesToRadians(mTheta)));
     eye.setY(mRadius * cos(qDegreesToRadians(mPhi)));
+    eye.setZ(mRadius * sin(qDegreesToRadians(mPhi)) * sin(qDegreesToRadians(mTheta)));
+
+    /*if(mHemisphere == LOWER){
+        //eye.setX(-1 * eye.x());
+        //eye.setY(-1 * eye.y());
+        //eye.setZ(-1 * eye.z());
+    }*/
 
     model.setToIdentity();
     view.setToIdentity();
@@ -163,6 +173,9 @@ void SMeshSTL::updateUniformBuffer(){
                 0.1f,
                 300.0f
     );
+    if(mHemisphere == LOWER){
+        proj.scale(-1,-1,1);
+    }
     mProgram->setUniformValue("eye", eye);
 }
 

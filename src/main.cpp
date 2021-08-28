@@ -22,7 +22,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
-    app.setWindowIcon(QIcon::fromTheme("applications-engineering"));
+    //app.setWindowIcon(QIcon::fromTheme("applications-engineering"));
+    app.setWindowIcon(QIcon::fromTheme("image-x-3ds"));
     QCoreApplication::setOrganizationName("NONE");
     QCoreApplication::setOrganizationDomain("none");
     QCoreApplication::setApplicationName("kSTL");

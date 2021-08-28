@@ -22,12 +22,19 @@
 class SMeshSTL : public SVao
 {
 public:
+    typedef enum{
+        UPPER,
+        LOWER
+    }Hemisphere;
+
     SMeshSTL(QOpenGLShaderProgram *program, QObject *parent = nullptr);
     ~SMeshSTL();
 
     void draw() override;
     //test:
     int loadModel(const QUrl &model);
+    void resetView();
+
     void setColor(QColor *color);
     void setDeltaRotation(QVector2D deltaMouse);
     void setDeltaTransform(QVector2D deltaMouse);
@@ -40,6 +47,7 @@ private:
     float mPhi = 0.0f;
     float mTheta = 0.0f;
     float mZoom = 1.0f;
+    Hemisphere mHemisphere;
     //Transformation Vector for moving the model around
     QVector3D mTransform;
     QVector2D mDeltaMove;
