@@ -26,9 +26,23 @@ void SMeshSTL::setColor(QColor *color){
     mFilamentColor = color;
 }
 
+
+static float angleClamp(float angle, float deltaMouse){
+    static const float mouseDivisor = 3.5f;
+    float rangle = angle;
+    if(angle + deltaMouse/mouseDivisor > 360){
+        rangle = angle + deltaMouse/mouseDivisor - 360;
+    }else if(angle + deltaMouse/mouseDivisor < 0){
+        rangle = 360 + (angle + deltaMouse/mouseDivisor);
+    }else{
+        rangle += deltaMouse / mouseDivisor;
+    }
+    return rangle;
+}
+
 void SMeshSTL::setDeltaRotation(QVector2D deltaMouse){
     //qDebug() << deltaMouse.x();
-    if(mPhi + deltaMouse.y()/4.0f > 360){
+    /*if(mPhi + deltaMouse.y()/4.0f > 360){
         mPhi = mPhi + deltaMouse.y()/4.0f - 360;
         qDebug() << "------------------------Here 1------------------------";
     }else if(mPhi + deltaMouse.y()/4.0f < 0){
@@ -36,15 +50,16 @@ void SMeshSTL::setDeltaRotation(QVector2D deltaMouse){
         qDebug() << "------------------------Here 2------------------------";
     }else{
         mPhi += deltaMouse.y() / 4.0f;
-    }
-
+    }*/
+    mPhi = angleClamp(mPhi, -deltaMouse.y());
     if(mPhi < 180){
         mHemisphere = UPPER;
+        mTheta = angleClamp(mTheta, deltaMouse.x());
     }else{
         mHemisphere = LOWER;
+        mTheta = angleClamp(mTheta, -deltaMouse.x());
     }
-
-    if(mTheta + deltaMouse.x()/4.0f > 360){
+    /*if(mTheta + deltaMouse.x()/4.0f > 360){
         mTheta = mTheta + deltaMouse.x()/4.0f - 360;
         qDebug() << "------------------------Here 3------------------------";
     }else if(mTheta + deltaMouse.x()/4.0f < 0){
@@ -52,7 +67,7 @@ void SMeshSTL::setDeltaRotation(QVector2D deltaMouse){
         qDebug() << "------------------------Here 4------------------------";
     }else{
         mTheta += deltaMouse.x() / 4.0f;
-    }
+    }*/
 }
 
 void SMeshSTL::setDeltaTransform(QVector2D deltaMouse){
