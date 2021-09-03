@@ -16,10 +16,19 @@ extern int errno;
 #define STL_VERTEX_SIZE 50
 #define STL_VERTEX_FLOAT_COUNT 9
 
-#define STL_GL_10_BITS 10
-#define STL_GL_10_MAX ((2 << (STL_GL_10_BITS - 1))-1)
+#define STL_MOD_POS_X 0
+#define STL_MOD_POS_Y 1
+#define STL_MOD_POS_Z 2
+
+struct MetaSTL{
+    unsigned int vertexCount;
+    float xmin, xmax;
+    float ymin, ymax;
+    float zmin, zmax;
+};
 
 int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, float* normals, size_t *normalSize);
+int stl_meta(struct MetaSTL *meta, float* vertices, size_t vertexSize);
 
 #ifdef __cplusplus
 } // extern "C"

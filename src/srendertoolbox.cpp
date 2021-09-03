@@ -89,10 +89,14 @@ SRenderToolbox::~SRenderToolbox()
 }
 
 void SRenderToolbox::setViewportSize(const QSize &size){
-    if(!size.isValid())
+    if(!size.isValid()){
+        qWarning() << "Invalid Viewport Size!";
         return;
+    }
+
     validViewport = true;
     mViewportSize = size;
+    //qDebug() << "[Render Toolbox] Size is: " << mViewportSize.width() << "x" << mViewportSize.height();
 }
 
 void SRenderToolbox::setFilamentColor(const QColor &color){

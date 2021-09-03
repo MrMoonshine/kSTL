@@ -61,8 +61,12 @@ Kirigami.ApplicationWindow {
         title: "Select a STL Mesh"
         nameFilters: [ "Stereolitography Meshes (*.stl *.ast)", "All files (*)" ]
         folder: shortcuts.home
+        selectMultiple: false
+        selectFolder: false
         onAccepted:{
             console.log(fileSelector.fileUrls);
+            renderarea.file = fileSelector.fileUrl
+            filenamedisp.text = fileSelector.fileUrl
         }
 
         onRejected: {
@@ -93,6 +97,7 @@ Kirigami.ApplicationWindow {
                       level: 3
                     }
                     Controls.Label{
+                        id: filenamedisp
                         text: "none"
                         color: Kirigami.Theme.disabledTextColor
                     }
@@ -110,6 +115,14 @@ Kirigami.ApplicationWindow {
                     }
                     Controls.Label{
                         text: "0"
+                        color: Kirigami.Theme.disabledTextColor
+                    }
+                    Kirigami.Heading {
+                      text: i18n("Dimesions")
+                      level: 3
+                    }
+                    Controls.Label{
+                        text: "0 x 0 x 0 mm"
                         color: Kirigami.Theme.disabledTextColor
                     }
                 }
@@ -144,7 +157,11 @@ Kirigami.ApplicationWindow {
                     Kirigami.Action {
                         text: i18n("Restore View")
                         icon.name: "view-refresh"
-                        onTriggered: showPassiveNotification(i18n("Contextual action 1 clicked"))
+                        onTriggered:{
+                            showPassiveNotification(i18n("Reset model view"))
+                            //Spherical coordinates; Except the x value is supposed to be the factor for the radius
+                            renderarea.view = Qt.vector3d(1,45,45)
+                        }
                     }
                 ]
             }

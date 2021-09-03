@@ -20,7 +20,8 @@ void main() {
     
     eyePos = eye;
     fragPos = inPosition;
-    normal = (model * vec4(inNormals, 1)).xyz;
+    normal = inNormals;
+    //normal = (model * vec4(inNormals, 1)).xyz;
     
     float thickness = 1;
     if(abs(inPosition).x - thickness < 0){

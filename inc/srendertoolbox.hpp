@@ -14,10 +14,9 @@ class SRenderToolbox : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    SRenderToolbox() : m_t(0), mBgShdr(0), mMeshShdr(0), mViewportSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT) { }
+    SRenderToolbox() : mBgShdr(0), mMeshShdr(0), mViewportSize(DEFAULT_APP_WIDTH, DEFAULT_APP_HEIGHT) { }
     ~SRenderToolbox();
 
-    void setT(qreal t) { m_t = t; }
     void setViewportSize(const QSize &size);
     void setWindow(QQuickWindow *window) { m_window = window; }
 
@@ -30,7 +29,6 @@ public slots:
 private:
     bool validViewport = false;
     QSize mViewportSize;
-    qreal m_t;
     QColor mFilamentColor = Qt::black;
 
     QOpenGLShaderProgram *mBgShdr;

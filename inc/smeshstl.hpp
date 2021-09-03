@@ -18,6 +18,7 @@
 
 #include <stl.h>
 #define MOUSE_WHEEL_ROTATION_STEP_SIZE 120
+#define MODEL_RADIUS_INITIAL_FACTOR 1.2f
 
 class SMeshSTL : public SVao
 {
@@ -31,15 +32,17 @@ public:
     ~SMeshSTL();
 
     void draw() override;
-    //test:
-    int loadModel(const QUrl &model);
-    void resetView();
+    void queueModelLoad(const QUrl &model);
+    void setView(const QVector3D &view);
 
     void setColor(QColor *color);
     void setDeltaRotation(QVector2D deltaMouse);
     void setDeltaTransform(QVector2D deltaMouse);
     void setDeltaZoom(int deltaWheel);
 private:
+    int loadModel(const QUrl &model);
+    void createBuffers();
+    void deleteBuffers();
     void handleTransformation(const QVector3D &eye);
     void updateUniformBuffer();
     //Spherical Camera Radius
@@ -51,10 +54,14 @@ private:
     //Transformation Vector for moving the model around
     QVector3D mTransform;
     QVector2D mDeltaMove;
+    //MetaData
+    struct MetaSTL mMeta;
+    bool mLoadNewFile = false;
+    QUrl mURLNewFile;
 
     uint32_t mVertexCount = 0;
     QColor *mFilamentColor = nullptr;
-    QOpenGLBuffer mVertexBO, mNormalsBO;
+    GLuint mVertexBuff, mNormalsBuff;
     QMatrix4x4 model, view, proj;
     QVector3D mModelUp;
 };

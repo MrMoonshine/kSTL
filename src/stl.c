@@ -4,15 +4,6 @@ extern "C"
 {
 #endif
 
-static int vec3_to_int_2_10_10_10_rev(float *vector){
-    int result = 0;
-    result |= (int)(STL_GL_10_MAX * vector[2]) << 0;
-    result |= (int)(STL_GL_10_MAX * vector[1]) << 10;
-    result |= (int)(STL_GL_10_MAX * vector[0]) << 20;
-    result |= (int)(0b11) << 30;
-    return result;
-}
-
 static const char* TAG = "STL";
 int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, float* normals, size_t *normalSize){
     char header[STL_HEADER_SIZE] = "";
@@ -69,6 +60,47 @@ int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, fl
     }
     return EXIT_SUCCESS;
 }
+
+int stl_meta(struct MetaSTL *meta, float* vertices, size_t vertexSize){
+    if(vertexSize < STL_VERTEX_FLOAT_COUNT * sizeof(float))
+        return EXIT_FAILURE;
+
+    meta->vertexCount = (unsigned int)(vertexSize/(STL_VERTEX_FLOAT_COUNT * sizeof(float)));
+    //Set initial values
+    meta->xmin = vertices[0];
+    meta->xmax = vertices[0];
+    meta->ymin = vertices[1];
+    meta->ymax = vertices[1];
+    meta->zmin = vertices[2];
+    meta->zmax = vertices[2];
+
+    for(unsigned int a = 0; a < vertexSize/sizeof(float); a++){
+        switch (a % 3) {
+        case STL_MOD_POS_X: {
+            if(meta->xmin > vertices[a])
+                meta->xmin = vertices[a];
+            else if(meta->xmax < vertices[a])
+                meta->xmax = vertices[a];
+        } break;
+        case STL_MOD_POS_Y: {
+            if(meta->ymin > vertices[a])
+                meta->ymin = vertices[a];
+            else if(meta->ymax < vertices[a])
+                meta->ymax = vertices[a];
+        } break;
+        case STL_MOD_POS_Z: {
+            if(meta->zmin > vertices[a])
+                meta->zmin = vertices[a];
+            else if(meta->zmax < vertices[a])
+                meta->zmax = vertices[a];
+        } break;
+        default:
+            break;
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

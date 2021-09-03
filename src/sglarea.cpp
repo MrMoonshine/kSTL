@@ -47,6 +47,17 @@ void SGlArea::setDeltaZoom(int deltaWheel){
     if(mRenderer)
         mRenderer->model()->setDeltaZoom(deltaWheel);
 }
+
+void SGlArea::setView(QVector3D view){
+    if(mRenderer)
+        mRenderer->model()->setView(view);
+    mView = view;
+}
+
+void SGlArea::setFile(const QUrl &file){
+    if(mRenderer)
+        mRenderer->model()->queueModelLoad(file);
+}
 //! [8]
 
 //! [1]
@@ -95,6 +106,5 @@ void SGlArea::sync()
         connect(window(), &QQuickWindow::beforeRenderPassRecording, mRenderer, &SRenderToolbox::paint, Qt::DirectConnection);
     }
     mRenderer->setViewportSize(window()->size() * window()->devicePixelRatio());
-    mRenderer->setT(mT);
     mRenderer->setWindow(window());
 }

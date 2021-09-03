@@ -26,8 +26,10 @@ SVao::~SVao(){
 }
 
 void SVao::setViewportSize(QSize *size){
-    if(size)
-    mViewportSize = size;
+    if(size){
+        mViewportSize = size;
+        //qDebug() << "Size is: " << mViewportSize->width() << "x" << mViewportSize->height();
+    }
 }
 
 void SVao::draw(){
