@@ -8,7 +8,8 @@
 #include <svao.hpp>
 #include <smeshstl.hpp>
 #include <sbackground.hpp>
-
+//Shader Compile
+//glslangValidator -o model.vert.spv -e main --target-env opengl  model.vert model.frag
 //! [1]
 class SRenderToolbox : public QObject, protected QOpenGLFunctions
 {

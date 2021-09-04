@@ -20,17 +20,7 @@ void main() {
     
     eyePos = eye;
     fragPos = inPosition;
-    normal = inNormals;
-    //normal = (model * vec4(inNormals, 1)).xyz;
-    
-    float thickness = 1;
-    if(abs(inPosition).x - thickness < 0){
-        fragColor = vec3(0,1,0);
-    }else if(abs(inPosition).y - thickness < 0){
-        fragColor = vec3(0,0,1);
-    }else if(abs(inPosition).z - thickness < 0){
-        fragColor = vec3(1,0,0);
-    }else{
-        fragColor = filament;
-    }    
+    //normal = inNormals;
+    normal = (model * vec4(inNormals, 1)).xyz;
+    fragColor = filament;
 }

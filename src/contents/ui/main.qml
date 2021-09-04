@@ -133,7 +133,7 @@ Kirigami.ApplicationWindow {
     pageStack.initialPage: Kirigami.Page {
         title: "kSTL"
         id: mainPage
-        //Page must be transparent to see underlying vulkan window
+        //Page must be transparent to see underlying Vulkan or OpenGL window
         background: null
 
         actions {
@@ -165,79 +165,80 @@ Kirigami.ApplicationWindow {
                     }
                 ]
             }
-        GridLayout{
-            id: mainContentLayout
-            anchors {
-                left: parent.left
-                top: parent.top
-                right: parent.right
+        MouseArea {
+            id: mousearea
+            //Layout.fillWidth: true
+            //height: 480
+            width: root.width;
+            height: root.height;
+
+            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+            property var chacheX: 0
+            property var chacheY: 0
+            onPressed: {
+                //console.log("Pressed!")
+                hoverEnabled: true
+                chacheX = mouseX
+                chacheY = mouseY
             }
-            rowSpacing: Kirigami.Units.largeSpacing
-            columnSpacing: Kirigami.Units.largeSpacing
-            columns: 1
 
-            ColumnLayout {
-                Kirigami.InlineMessage {
-                    Layout.fillWidth: true
-                    text: "Invalid STL mesh"
-                    type: Kirigami.MessageType.Warning
-                    visible: false
+            onReleased: {
+                hoverEnabled: false
+                //console.log("Released")
+            }
+
+            onPositionChanged: {
+                if(mousearea.pressedButtons & Qt.LeftButton && mousearea.pressedButtons & Qt.MiddleButton){
+                    chacheX = mouseX
+                    chacheY = mouseY
+                    return;
+                }else if(mousearea.pressedButtons & Qt.LeftButton){
+                    renderarea.deltaRotation = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
+                    chacheX = mouseX
+                    chacheY = mouseY
+                }else{
+                    renderarea.deltaTransform = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
+                    chacheX = mouseX
+                    chacheY = mouseY
                 }
+            }
 
-                Kirigami.InlineMessage {
-                    Layout.fillWidth: true
-                    text: "Fatal error while loading STL file"
-                    type: Kirigami.MessageType.Error
-                    visible: false
+            onWheel: {
+                //console.log("Wheel: " + wheel.angleDelta.y)
+                renderarea.deltaZoom = wheel.angleDelta.y
+            }
+            GridLayout{
+                id: mainContentLayout
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    right: parent.right
                 }
+                rowSpacing: Kirigami.Units.largeSpacing
+                columnSpacing: Kirigami.Units.largeSpacing
+                columns: 1
 
-                Kirigami.InlineMessage {
-                    Layout.fillWidth: true
-                    text: "A Pink Cube, Rendered with OpenGL"
-                    type: Kirigami.MessageType.Information
-                    visible: false
-                }
-
-                MouseArea {
-                    id: mousearea
-                    Layout.fillWidth: true
-                    height: 480
-
-                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-
-                    property var chacheX: 0
-                    property var chacheY: 0
-                    onPressed: {
-                        //console.log("Pressed!")
-                        hoverEnabled: true
-                        chacheX = mouseX
-                        chacheY = mouseY
+                ColumnLayout {
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        text: "Invalid STL mesh"
+                        type: Kirigami.MessageType.Warning
+                        visible: false
                     }
 
-                    onReleased: {
-                        hoverEnabled: false
-                        //console.log("Released")
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        text: "Fatal error while loading STL file"
+                        type: Kirigami.MessageType.Error
+                        visible: false
                     }
 
-                    onPositionChanged: {
-                        if(mousearea.pressedButtons & Qt.LeftButton && mousearea.pressedButtons & Qt.MiddleButton){
-                            chacheX = mouseX
-                            chacheY = mouseY
-                            return;
-                        }else if(mousearea.pressedButtons & Qt.LeftButton){
-                            renderarea.deltaRotation = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
-                            chacheX = mouseX
-                            chacheY = mouseY
-                        }else{
-                            renderarea.deltaTransform = Qt.vector2d(mouseX - chacheX, mouseY - chacheY)
-                            chacheX = mouseX
-                            chacheY = mouseY
-                        }
-                    }
-
-                    onWheel: {
-                        //console.log("Wheel: " + wheel.angleDelta.y)
-                        renderarea.deltaZoom = wheel.angleDelta.y
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        text: "A Pink Cube, Rendered with OpenGL"
+                        type: Kirigami.MessageType.Information
+                        visible: false
                     }
 
                     GlRenderArea {

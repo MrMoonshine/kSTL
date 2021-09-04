@@ -4,7 +4,8 @@ SMeshSTL::SMeshSTL(QOpenGLShaderProgram *program, QObject *parent) :
     SVao(program, parent)
 {
     createBuffers();
-    loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
+    //loadModel(QUrl("file:///home/david/3D-Druck/3DBenchy.stl"));
+    loadModel(QUrl("file:///home/david/3D-Druck/Coding-Test/hextest.stl"));
     mModelUp = QVector3D(0, 1, 0);
     mDeltaMove = QVector2D(0,0);
     mTransform = QVector3D(0,0,0);
@@ -103,6 +104,8 @@ int SMeshSTL::loadModel(const QUrl &model){
 
     glBindBuffer(GL_ARRAY_BUFFER, mNormalsBuff);
     glBufferData(GL_ARRAY_BUFFER, normalsSize, normals, GL_STATIC_DRAW);
+
+       qDebug() << "Normals size is: " << normalsSize/(sizeof(float)*3);
 
     mVao.release();
     free(normals);
@@ -215,8 +218,9 @@ void SMeshSTL::draw(){
                 3,
                 0
     );
+
     mProgram->enableAttributeArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, mNormalsBuff);
+    //glBindBuffer(GL_ARRAY_BUFFER, mNormalsBuff);
     mProgram->setAttributeBuffer(
                 1,
                 GL_FLOAT,

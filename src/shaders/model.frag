@@ -32,4 +32,5 @@ void main(void)
 	// Output Vector for colour
 	//if(gl_FragCoord.x < 400)
     outColor = vec4(result, 1.0);
+    //outColor = vec4(normal, 1.0);
 }
