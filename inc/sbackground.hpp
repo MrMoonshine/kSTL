@@ -3,7 +3,7 @@
 
 #include <svao.hpp>
 #include <QVector4D>
-#include <PlatformTheme>
+#include <Kirigami/PlatformTheme>
 #include <QColor>
 
 class SBackground : public SVao

@@ -5,6 +5,18 @@ extern "C"
 #endif
 
 static const char* TAG = "STL";
+
+static bool isAsciiFile(FILE *fp){
+    char c;
+    while((c = fgetc(fp)) != EOF){
+        if(!(isprint((int)c) || isspace((int)c))){
+            //printf("Determined binary file by: %c",c);
+            return false;
+        }
+    }
+    return true;
+}
+
 int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, float* normals, size_t *normalSize){
     char header[STL_HEADER_SIZE] = "";
     unsigned int number_of_vertices;
@@ -12,13 +24,21 @@ int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, fl
     FILE* stlfp;
     stlfp = fopen(filename,"r");
     if(stlfp){
+        if(isAsciiFile(stlfp)){
+            printf("[%s] ASCII files are not supported!\n",TAG);
+            fclose(stlfp);
+            return STL_ERROR_ASCII;
+        }
+        //Return to the start of the file
+        rewind(stlfp);
+        //Begin to read data
         fread(header, STL_HEADER_SIZE, 1, stlfp);
         fread(&number_of_vertices, sizeof(unsigned int), 1, stlfp);
 
         if(number_of_vertices < 1){
             fprintf(stderr, "[%s] Invalid STL Mesh!",TAG);
             fclose(stlfp);
-            return EXIT_FAILURE;
+            return STL_ERROR_MESH;
         }
         //If the pointers are NULL then return size
         if(vertices == NULL || normals == NULL){
@@ -27,8 +47,6 @@ int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, fl
             return EXIT_SUCCESS;
         }
 
-        //memset(normals, 0, *normalSize);
-        //memset(vertices, 0, *vertexSize);
         for(unsigned int v = 0; v < number_of_vertices; v++){
             float normal[3];
             fread(normal, sizeof(float) * 3, 1, stlfp);
@@ -51,12 +69,11 @@ int stl_model_init(const char *filename, float* vertices, size_t* vertexSize, fl
             fread(&attributes, sizeof(unsigned short), 1, stlfp);
         }
 
-        printf("[%s] STL %s:\n\tIt has %d vertices\n",TAG, header, number_of_vertices);
+        //printf("[%s] STL %s:\n\tIt has %d vertices\n",TAG, header, number_of_vertices);
 
         fclose(stlfp);
     }else{
-        errno = EIO;
-        return EXIT_FAILURE;
+        return STL_ERROR_IO;
     }
     return EXIT_SUCCESS;
 }

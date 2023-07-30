@@ -28,7 +28,7 @@ public:
         LOWER
     }Hemisphere;
 
-    SMeshSTL(QOpenGLShaderProgram *program, QObject *parent = nullptr);
+    SMeshSTL(QOpenGLShaderProgram *program, const QString &initialFile = "", QObject *parent = nullptr);
     ~SMeshSTL();
 
     void draw() override;

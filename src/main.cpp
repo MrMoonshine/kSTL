@@ -10,8 +10,8 @@
 #include <KLocalizedString>
 #include <KAboutData>
 
-#include <KirigamiPluginFactory>
-#include <PlatformTheme>
+#include <Kirigami/KirigamiPluginFactory>
+#include <Kirigami/PlatformTheme>
 
 #include <controller.hpp>
 #include <sglarea.hpp>
@@ -22,16 +22,14 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
-    //app.setWindowIcon(QIcon::fromTheme("applications-engineering"));
     app.setWindowIcon(QIcon::fromTheme("image-x-3ds"));
     QCoreApplication::setOrganizationName("NONE");
     QCoreApplication::setOrganizationDomain("none");
     QCoreApplication::setApplicationName("kSTL");
     KLocalizedString::setApplicationDomain("kSTL");
-    //Enable Vulkan
-    //QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
     //Register Render Space as QML type
     qmlRegisterType<SGlArea>("kSTL", 1, 0, "GlRenderArea");
+    //qmlRegisterType<GUIErrorHandle>("kSTL", 1, 0, "ErrorHandle");
       /*---------------------------------*/
      /*          About Data             */
     /*---------------------------------*/
@@ -57,10 +55,27 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                 );
     KAboutData::setApplicationData(aboutData);
     qmlRegisterSingletonInstance("kSTL", 1, 0, "Controller", &Controller::instance());
+    GUIErrorHandle err;
+    qmlRegisterSingletonInstance("kSTLErrorMessage", 1,0, "ErrorHandle",  &err);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
+
+    if(app.arguments().size() < 2){
+        printf("No File Specified\n");
+        engine.rootContext()->setContextProperty(QStringLiteral("initialFileName"), QString(""));
+    }else{
+        QString input = app.arguments().at(1);
+        //If the user specifies a valid file, the filepath will be converted to a valid URL
+        if(QFile(input).exists())
+            input = "file://" + input;
+        engine.rootContext()->setContextProperty(QStringLiteral("initialFileName"), input);
+    }
+
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
+
+    Controller::instance().setMessage("A working inline message!");
+    err.setMessage("Oida");
 
     if (engine.rootObjects().isEmpty()) {
         return -1;

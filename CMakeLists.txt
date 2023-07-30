@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.16.0)
 
 project(kSTL)
 
@@ -47,7 +47,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 ${QT5_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml QuickControls2 Svg)
+find_package(Qt5 ${QT5_MIN_VERSION} REQUIRED COMPONENTS Core Gui Quick QuickControls2 Svg)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Kirigami2 CoreAddons I18n KIO)
 
 include(FeatureSummary)

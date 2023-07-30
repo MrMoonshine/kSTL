@@ -1,5 +1,10 @@
 #include <errorhandler.hpp>
 
+static QQmlContext *sRoot = nullptr;
+void ErrorHandle::setContext(QQmlContext *root){
+    sRoot = root;
+}
+
 void ErrorHandle::logD(const char* TAG, const char* msg){
 #ifndef NODEBUG
     logUniversal(TAG, msg, ErrorHandle::DEBUG);
@@ -38,4 +43,18 @@ void ErrorHandle::logUniversal(const char* TAG, const char* msg, ErrorHandle::Se
 #ifndef NOCOLOR
     printf("\033[0m");
 #endif
+}
+
+GUIErrorHandle::GUIErrorHandle(){
+    mMessage = "test";
+    mVisible = true;
+    setMessage("Oida");
+}
+GUIErrorHandle::~GUIErrorHandle(){
+
+}
+
+void GUIErrorHandle::setMessage(QString msg){
+    mMessage = msg;
+    emit messageChanged();
 }

@@ -7,6 +7,7 @@ import QtQuick.Layouts 1.14
 import org.kde.kirigami 2.13 as Kirigami
 //Custom Instances
 import kSTL 1.0
+import kSTLErrorMessage 1.0
 
 // Base element, provides basic features needed for all kirigami applications
 Kirigami.ApplicationWindow {
@@ -34,12 +35,11 @@ Kirigami.ApplicationWindow {
     }
     //About page.
     Component {
-            id: aboutPage
-
-            Kirigami.AboutPage {
-                aboutData: Controller.aboutData
-            }
+        id: aboutPage
+        Kirigami.AboutPage {
+            aboutData: Controller.aboutData
         }
+    }
 
     //Color Picker
     ColorDialog {
@@ -64,7 +64,7 @@ Kirigami.ApplicationWindow {
         selectMultiple: false
         selectFolder: false
         onAccepted:{
-            console.log(fileSelector.fileUrls);
+            console.log(fileSelector.fileUrl);
             renderarea.file = fileSelector.fileUrl
             filenamedisp.text = fileSelector.fileUrl
         }
@@ -122,7 +122,8 @@ Kirigami.ApplicationWindow {
                       level: 3
                     }
                     Controls.Label{
-                        text: "0 x 0 x 0 mm"
+                        //text: "0 x 0 x 0 mm"
+                        text: initialFileName;
                         color: Kirigami.Theme.disabledTextColor
                     }
                 }
@@ -133,8 +134,10 @@ Kirigami.ApplicationWindow {
     pageStack.initialPage: Kirigami.Page {
         title: "kSTL"
         id: mainPage
-        //Page must be transparent to see underlying Vulkan or OpenGL window
+        //Page must be transparent to see underlying OpenGL window
         background: null
+        // Padding must be set to 0 to show error messages correctly
+        padding: Kirigami.Units.largeSpacing
 
         actions {
                 main: Kirigami.Action {
@@ -219,39 +222,30 @@ Kirigami.ApplicationWindow {
                 columnSpacing: Kirigami.Units.largeSpacing
                 columns: 1
 
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Kirigami.Units.largeSpacing
+                    Layout.rightMargin: 2 * Kirigami.Units.largeSpacing
+                    Layout.bottomMargin: Kirigami.Units.smallSpacing
+
+                    text: ErrorHandle.message
+                    type: Kirigami.MessageType.Warning
+                    showCloseButton: true
+                    visible: true
+                }
                 ColumnLayout {
-                    Kirigami.InlineMessage {
-                        Layout.fillWidth: true
-                        text: "Invalid STL mesh"
-                        type: Kirigami.MessageType.Warning
-                        visible: false
-                    }
-
-                    Kirigami.InlineMessage {
-                        Layout.fillWidth: true
-                        text: "Fatal error while loading STL file"
-                        type: Kirigami.MessageType.Error
-                        visible: false
-                    }
-
-                    Kirigami.InlineMessage {
-                        Layout.fillWidth: true
-                        text: "A Pink Cube, Rendered with OpenGL"
-                        type: Kirigami.MessageType.Information
-                        visible: false
-                    }
-
                     GlRenderArea {
                         id: renderarea;
                         filament: Kirigami.Theme.focusColor;
+                        file: initialFileName;
                         SequentialAnimation on t {
-                            NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
-                            NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
+                            NumberAnimation { to: 1; duration: 2500;}
                             loops: Animation.Infinite
                             running: true
                         }
                     }
                 }
+
             }
         }
     }
